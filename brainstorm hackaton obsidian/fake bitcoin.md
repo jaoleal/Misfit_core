@@ -18,4 +18,7 @@ things that i consider important in the breake options:
 * dificult target
 * nonce
 we can use this https://ratatui.rs/ for a tui interface.
+
+we can use this: https://medium.com/@Collinszurum/bitcoin-block-construction-using-rust-a-step-by-step-guide-2c961d5e1af2
+for the base to construct the block
 and some slides with escalidraw and google slides for presentation.
