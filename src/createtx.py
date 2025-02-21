@@ -5,43 +5,36 @@
 #   - Replace transaction parameters by misfit parameters
 #   - Assemble misfit transaction
 
-from utils import bcli
+from utils import bcli, randomize
 import json
 
 
 class CreateTx:
     def __init__(self, **args):
         # Transaction
-        self.tx_count: int = args.get("tx_count", 0)
-        self.invalid_tx_count: int = args.get("invalid_tx_count", 0)
-
         self.tx_version: bool = args.get("tx_version", False)
-        self.tx_marker: bool = args.get("tx_marker", False)
-        self.tx_flag: bool = args.get("tx_flag", False)
         self.tx_locktime: bool = args.get("tx_locktime", False)
 
         # Inputs
-        self.tx_in_count: int = args.get("tx_in_count", 0)
-        self.invalid_tx_in_count: int = args.get("invalid_tx_in_count", 0)
+        # TODO: self.tx_in_count: int = args.get("tx_in_count", 0)
+        # TODO: self.invalid_tx_in_count: int = args.get("invalid_tx_in_count", 0)
 
         self.tx_in_txid: bool = args.get("tx_in_txid", False)
         self.tx_in_vout: bool = args.get("tx_in_vout", False)
-        self.tx_in_script_size: bool = args.get("tx_in_script_size", False)
         self.tx_in_script: bool = args.get("tx_in_script", False)
         self.tx_in_sequence: bool = args.get("tx_in_sequence", False)
 
         # Outputs
-        self.tx_out_count: int = args.get("tx_out_count", 0)
-        self.invalid_tx_out_count: int = args.get("invalid_tx_out_count", 0)
+        # TODO: self.tx_out_count: int = args.get("tx_out_count", 0)
+        # TODO: self.invalid_tx_out_count: int = args.get("invalid_tx_out_count", 0)
 
-        self.tx_out_amount: bool = args.get("tx_out_amount", False)
+        # TODO: self.tx_out_amount: bool = args.get("tx_out_amount", False)
         self.tx_out_script_size: bool = args.get("tx_out_script_size", False)
         self.tx_out_script: bool = args.get("tx_out_script", False)
 
         # Witness
-        self.tx_witness_count: int = args.get("tx_witness_count", 0)
-        self.invalid_tx_witness_count: int = args.get(
-            "invalid_tx_witness_count", 0)
+        # TODO: self.tx_witness_count: int = args.get("tx_witness_count", 0)
+        # TODO: self.invalid_tx_witness_count: int = args.get("invalid_tx_witness_count", 0)
 
         self.tx_witness_size: bool = args.get("tx_witness_size", False)
         self.tx_witness_item: bool = args.get("tx_witness_item", False)
@@ -101,9 +94,36 @@ class CreateTx:
         decoded_tx = json.loads(bcli(f'decoderawtransaction {raw_tx}'))
         return decoded_tx
 
-    def replace_misfit():
-        # TODO: Replace parameters by misfit params
-        return
+    def replace_misfit(decoded_tx: object) -> object:
+        if self.version:
+            decoded_tx['version'] = int.from_bytes(randomize(
+                bytes([decoded_tx['version']]).hex()))
+
+        if self.locktime:
+            decoded_tx['locktime'] = int.from_bytes(randomize(
+                bytes([decoded_tx['locktime']]).hex()))
+
+        if self.tx_in_txid:
+            decoded_tx['vin'][0]['txid'] = randomize(
+                decoded_tx['vin'][0]['txid'])
+
+        if self.tx_in_vout:
+            decoded_tx['vin'][0]['vout'] = int.from_bytes(randomize(
+                bytes([decoded_tx['vin'][0]['vout']]).hex()))
+
+        if self.tx_in_script:
+            decoded_tx['vin'][0]['scriptSig']['hex'] = randomize(
+                decoded_tx['vin'][0]['scriptSig']['hex'])
+
+        if self.tx_in_sequence:
+            decoded_tx['vin'][0]['sequence'] = int.from_bytes(randomize(
+                bytes([decoded_tx['vin'][0]['sequence']]).hex()))
+
+        if self.tx_out_script:
+            decoded_tx['vout'][0]['scriptPubKey']['hex'] = randomize(
+                decoded_tx['vout'][0]['scriptPubKey']['hex'])
+
+        return decoded_tx
 
     def assemble_transaction():
         # TODO: Assemble misfit transaction
