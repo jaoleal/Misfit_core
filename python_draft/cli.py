@@ -1,8 +1,8 @@
 import cmd
 
-class MyCLI(cmd.Cmd):
+class Misfit_core_cli(cmd.Cmd):
     prompt = '>> '
-    intro = 'Welcome to MyCLI. Type "help" for available commands.'
+    intro = 'Welcome to Misfit core. lets cook some test food, type help for help 🤙'
 
     def do_hello(self, line):
         """Print a greeting."""
@@ -11,6 +11,7 @@ class MyCLI(cmd.Cmd):
     def do_quit(self, line):
         """Exit the CLI."""
         return True
+    def do_shit(self, line):
+        """ say shit    """
+        print("shit :(")
 
-if __name__ == '__main__':
-    MyCLI().cmdloop()
