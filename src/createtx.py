@@ -2,11 +2,13 @@
 #   - Import a lib (for save time)
 #   - Create a valid raw transaction
 #   - Split the transaction
-#   - Replace transaction parameters by misfit parameters 
-#   - Assemble misfit transaction 
+#   - Replace transaction parameters by misfit parameters
+#   - Assemble misfit transaction
 
-from bcli import bcli
+from utils import bcli
 import json
+
+
 class CreateTx:
     def __init__(self, **args):
         # Transaction
@@ -27,18 +29,19 @@ class CreateTx:
         self.tx_in_script_size: bool = args.get("tx_in_script_size", False)
         self.tx_in_script: bool = args.get("tx_in_script", False)
         self.tx_in_sequence: bool = args.get("tx_in_sequence", False)
-        
+
         # Outputs
         self.tx_out_count: int = args.get("tx_out_count", 0)
         self.invalid_tx_out_count: int = args.get("invalid_tx_out_count", 0)
-        
+
         self.tx_out_amount: bool = args.get("tx_out_amount", False)
         self.tx_out_script_size: bool = args.get("tx_out_script_size", False)
         self.tx_out_script: bool = args.get("tx_out_script", False)
 
         # Witness
         self.tx_witness_count: int = args.get("tx_witness_count", 0)
-        self.invalid_tx_witness_count: int = args.get("invalid_tx_witness_count", 0)
+        self.invalid_tx_witness_count: int = args.get(
+            "invalid_tx_witness_count", 0)
 
         self.tx_witness_size: bool = args.get("tx_witness_size", False)
         self.tx_witness_item: bool = args.get("tx_witness_item", False)
@@ -83,12 +86,13 @@ class CreateTx:
 
         # Sign transaction
         print("Sign transaction")
-        signed_tx = json.loads(bcli(f'signrawtransactionwithwallet {raw_tx}'))['hex']
+        signed_tx = json.loads(
+            bcli(f'signrawtransactionwithwallet {raw_tx}'))['hex']
 
         # Check if is valid tx
         print("Checking if is valid transaction")
         json.loads(bcli(f'testmempoolaccept ["{signed_tx}"]'))[0]
-        
+
         return raw_tx
 
     def split_transaction(raw_tx: str) -> object:
@@ -100,9 +104,7 @@ class CreateTx:
     def replace_misfit():
         # TODO: Replace parameters by misfit params
         return
-    
+
     def assemble_transaction():
         # TODO: Assemble misfit transaction
         return
-
-#🐟🏐🐈
