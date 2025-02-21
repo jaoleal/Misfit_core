@@ -1,3 +1,4 @@
 /target
 .venv/
 build/
+misfit_core.egg-info
