@@ -43,7 +43,7 @@ class CreateTx:
         self.tx_witness_size: bool = args.get("tx_witness_size", False)
         self.tx_witness_item: bool = args.get("tx_witness_item", False)
 
-    def create_valid_tx(self):
+    def create_valid_tx() -> str:
         # Create a wallet
         print("Creating misfit-core wallet")
         try:
@@ -91,15 +91,17 @@ class CreateTx:
 
         return raw_tx
 
-    def split(self):
-        # TODO: Split raw transaction
-        return
+    def split_transaction(raw_tx: str) -> object:
+        # Decode transaction
+        print("Decode transaction")
+        decoded_tx = json.loads(bcli(f'decoderawtransaction {raw_tx}'))
+        return decoded_tx
 
-    def replace(self):
+    def replace_misfit():
         # TODO: Replace parameters by misfit params
         return
     
-    def assemble(self):
+    def assemble_transaction():
         # TODO: Assemble misfit transaction
         return
 
