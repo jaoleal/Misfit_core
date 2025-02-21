@@ -14,7 +14,7 @@ pub struct BlockHeader {
 
 impl BlockHeader {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::thread_rng();   
 
         // Generate random values for demonstration purposes
         let prev_block_hash = rng.gen::<[u8; 32]>();
@@ -23,7 +23,7 @@ impl BlockHeader {
         let difficulty_target = 0xFFFFFFF; // Placeholder value
         let nonce = 0; // Placeholder value
 
-        BlockHeader {
+        BlockHeader {   
             version: 1,
             prev_block_hash,
             merkle_root,
