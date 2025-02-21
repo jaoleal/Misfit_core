@@ -1,0 +1,2 @@
+[console_scripts]
+misfit-core = src.misfit_core:main
