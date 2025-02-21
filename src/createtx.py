@@ -88,7 +88,7 @@ class CreateTx:
         # Check if is valid tx
         print("Checking if is valid transaction")
         json.loads(bcli(f'testmempoolaccept ["{signed_tx}"]'))[0]
-
+        
         return raw_tx
 
     def split_transaction(raw_tx: str) -> object:
