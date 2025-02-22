@@ -46,36 +46,30 @@ class CreateTx:
             sys.exit("No nodes detected, please run `bitcoind -regtest`.")
 
         # Create a wallet
-        print("Creating misfit-core wallet")
         try:
             bcli("createwallet misfit-wallet")
         except:
-            print("misfit-wallet already exists")
+            pass
 
         # Loads misfit-wallet
-        print("Loading wallet")
         try:
             bcli("loadwallet misfit-wallet")
         except:
-            print("misfit-wallet already loaded")
+            pass
 
         # Generate new address for wallet
-        print("Generating new address")
         addr = bcli("getnewaddress misfit-wallet")
 
         # Generate funds to the address
-        print("Generating funds to the address")
         blockhash = json.loads(bcli(f"generatetoaddress 101 {addr}"))[0]
 
         # Get block data
-        print("Get block data")
         block = json.loads(bcli(f"getblock {blockhash} 2"))
 
         # Get transaction from block
         tx = block['tx'][0]
 
         # Create valid raw transaction
-        print("Creating a raw transaction")
         tx_in = json.dumps([{
             "txid": tx['txid'],
             "vout": tx['vout'][0]['n']
@@ -90,19 +84,15 @@ class CreateTx:
         raw_tx = bcli(f'createrawtransaction {tx_in} {tx_out}')
 
         # Sign transaction
-        print("Sign transaction")
         signed_tx = json.loads(
             bcli(f'signrawtransactionwithwallet {raw_tx}'))['hex']
 
         # Check if is valid tx
-        print("Checking if is valid transaction")
         json.loads(bcli(f'testmempoolaccept ["{signed_tx}"]'))[0]
 
         return raw_tx
 
     def split_transaction(self, raw_tx: str) -> object:
-        print("Spliting raw transaction")
-
         offset = 0
         txns = bytes.fromhex(raw_tx)
 
@@ -192,8 +182,6 @@ class CreateTx:
         }
 
     def replace_misfit(self, decoded_tx: object) -> object:
-        print("Replacing parameters")
-
         if self.tx_version:
             decoded_tx['version'] = randomize(decoded_tx['version'])
 
@@ -223,8 +211,6 @@ class CreateTx:
         return decoded_tx
 
     def assemble_transaction(self, decoded_tx: object) -> str:
-        print("Assembling transaction")
-
         version = decoded_tx['version']
         marker = decoded_tx['marker']
         flag = decoded_tx['flag']
