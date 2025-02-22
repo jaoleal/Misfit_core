@@ -1,5 +1,6 @@
 from utils import bcli, randomize
 import json
+import sys
 
 
 class CreateTx:
