@@ -182,7 +182,7 @@ class CreateTx:
             decoded_tx['version'] = randomize(decoded_tx['version'])
 
         if self.locktime:
-            decoded_tx['locktime'] = randomize(decoded_tx['locktime'])
+            decoded_tx['lock_time'] = randomize(decoded_tx['lock_time'])
 
         if self.tx_in_txid:
             for x in decoded_tx['tx_in']:
@@ -207,34 +207,34 @@ class CreateTx:
         return decoded_tx
 
     def assemble_transaction(decoded_tx: object) -> str:
-        version = decoded_tx['version'].to_bytes(4, "little")
-        flags = bytes.fromhex("0001")
-        locktime = decoded_tx['locktime'].to_bytes(4, "little")
+        version = decoded_tx['version']
+        marker = decoded_tx['marker']
+        flag = decoded_tx['flag']
+        locktime = decoded_tx['lock_time']
 
         inputs = []
-        for input in decoded_tx['vin']:
-            txid = bytes.fromhex(input['txid'])
-            vout = input['vout'].to_bytes(4, "little")
-            script = bytes.fromhex(input['scriptSig']['hex'])
-            scriptlen = bytes([len(script)])
-            sequence = input['sequence'].to_bytes(4, 'little')
-            inputs.append(txid + vout + scriptlen + script + sequence)
+        for tx_in in decoded_tx['tx_in']:
+            inputs.append(''.join(str(value) for value in tx_in.values()))
 
         outputs = []
-        for output in decoded_tx['vout']:
-            amount = int(output['value'] * 100_000_000).to_bytes(8, 'little')
-            scriptpubkey = output['scriptPubKey']['hex']
-            scriptpubkeylen = bytes([len(scriptpubkey)])
-            outputs.append(amount + scriptpubkeylen + scriptpubkey)
+        for tx_out in decoded_tx['tx_out']:
+            inputs.append(''.join(str(value) for value in tx_out.values()))
 
         witnesses = []
-        for witness in decoded_tx['vout']:
-            amount = int(output['value'] * 100_000_000).to_bytes(8, 'little')
-            scriptpubkey = output['scriptPubKey']['hex']
-            scriptpubkeylen = bytes([len(scriptpubkey)])
-            outputs.append(amount + scriptpubkeylen + scriptpubkey)
+        for witness in decoded_tx['witness']:
+            inputs.append(''.join(str(value) for value in witness.values()))
 
         # [version] [flags] [inputs lenght] [inputs] [outputs lenght] [outputs] [witness] [locktime]
-        transaction = version + flags + len(inputs).to_bytes() + b''.join(inputs) + len(
-            outputs).to_bytes() + b''.join(outputs) + b''.join(witnesses) + locktime
-        return transaction.hex()
+        transaction = ''.join([
+            version,
+            marker,
+            flag,
+            len(inputs).to_bytes().hex(),
+            ''.join(inputs),
+            len(outputs).to_bytes().hex(),
+            ''.join(outputs),
+            len(witnesses).to_bytes().hex(),
+            ''.join(witnesses),
+            locktime
+        ])
+        return transaction
