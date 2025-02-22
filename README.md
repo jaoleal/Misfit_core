@@ -16,10 +16,11 @@ cd Misfit_core
 Create a python venv to install dependecies
 ```b
 python3 -m venv .venv
+```
 activate the venv
 ```b
 source .venv/bin/activate
-```
+``` 
 ```
 Install the dependencies
 ```b
