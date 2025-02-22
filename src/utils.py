@@ -17,7 +17,6 @@ def take_time():
     # Encode the timestamp as a 4-byte little-endian integer
     nTime = struct.pack('<I', current_time)
     return(current_time)
-print(take_time())
 
 
 # Swap Endian function
