@@ -1,4 +1,4 @@
-from utils import bcli, randomize
+from src.utils import bcli, randomize
 import json
 import sys
 
