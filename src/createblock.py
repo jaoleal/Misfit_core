@@ -4,7 +4,7 @@
 #   - Split the block
 #   - Replace block parameters by misfit parameters 
 #   - Assemble misfit block
-
+from utils import merkleroot, reverse_bytes, take_time
 class CreateBlock:
     def __init__ (self, **args):
         self.version: bool = False
@@ -13,6 +13,7 @@ class CreateBlock:
         self.timestamp: bool = False
         self.bits: bool = False
         self.nonce: bool = False
+        self.txs: bool = False
         self.tx_count: int = 0
         self.invalid_tx_count: int = 0
         self.tx_version: bool = False
@@ -37,13 +38,33 @@ class CreateBlock:
         self.tx_witness_item: bool = False
         return
 
-    def create(self, **args) -> str:
+    def create(txs:dict,previous_block:str,version=0,split=False) -> str:
         # TODO: Create a valid raw block
-
-        return
+        """In the we will need:
+        version 4 bytes litle
+        previous block 32 bytes natural bytes order
+        merkle root 32 bytes natural bytes order
+        time  4 bytes litle endian
+        bits 4 bytes litle
+        Nonce 4 bytes litle
+        transaction count compact size
+        transactions all of the raw transactions  """  
+        count = 0
+        txids = []
+        txs_concatened = ""
+        for b in txs:
+            count += 1
+        for e in txs[txids]:
+            txids.append(c) 
+        merkle_root = reverse_bytes(merkleroot(txids))
+        for c in txs:
+            txs_concatened += c
+        block = version + previous_block + merkle_root + take_time() + self.bits + self.nonce + count + txs_concatened
+        return block
 
     def split():
         # TODO: Split the block
+        create()
         return
 
     def replace():

@@ -3,6 +3,23 @@ import sys
 import random
 from subprocess import run
 
+import time
+import struct
+def take_time():
+    # Get the current Unix timestamp
+    current_time = int(time.time())
+
+    # Ensure the timestamp is valid (this is a simplified check)
+    # In practice, you'd compare it to the median time of the last 11 blocks.
+    if current_time < 0 or current_time > 0xFFFFFFFF:
+        raise ValueError("Invalid timestamp")
+
+    # Encode the timestamp as a 4-byte little-endian integer
+    nTime = struct.pack('<I', current_time)
+    return(current_time)
+print(take_time())
+
+
 # Swap Endian function
 def swap_endian(data):
     return ''.join([data[i:i+2] for i in range(0, len(data), 2)][::-1])
