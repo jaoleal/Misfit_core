@@ -1,10 +1,3 @@
-# TODO:
-#   - Import a lib (for save time)
-#   - Create a valid raw transaction
-#   - Split the transaction
-#   - Replace transaction parameters by misfit parameters
-#   - Assemble misfit transaction
-
 from utils import bcli, randomize
 import json
 
