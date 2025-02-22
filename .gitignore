@@ -1,4 +1,5 @@
 /target
 .venv/
 build/
-misfit_core.egg-info
+*.egg-info
+**/__pycache__/**
