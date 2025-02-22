@@ -4,6 +4,11 @@ A tool for create specified invalid parameters for tests in bicoin.
 
 ## Documentation
 
+## run a regtest
+For run a regtest, with the bitcoin binaries installed
+```b
+bitcoind -regetst
+```
 ## Installation
 Clone the repo
 ```b
