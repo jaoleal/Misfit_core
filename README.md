@@ -4,6 +4,27 @@ A tool for create specified invalid parameters for tests in bicoin.
 
 ## Documentation
 
+## Installation
+Clone the repo
+```b
+git clone https://github.com/j-moreno-c-r/Misfit_core
+```
+Enter the directory
+```b
+cd Misfit_core
+```
+Create a python venv to install dependecies
+```b
+python3 -m venv .venv
+```
+Install the dependencies
+```b
+pip install .
+```
+And run like a normal cli
+```b
+misfit-core
+```
 ### Basic usage
 
 <u>Usage:</u> `misfit-core [OPTIONS] <COMMAND>`
