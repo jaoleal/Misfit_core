@@ -1,69 +1,76 @@
-# TODO:
-#   - Import a lib (for save time)
-#   - Create a valid raw transaction
-#   - Split the transaction
-#   - Replace transaction parameters by misfit parameters
-#   - Assemble misfit transaction
-
-from utils import bcli, randomize
+from src.utils import bcli, randomize
 import json
+import sys
 
 
 class CreateTx:
-    def __init__(self, **args):
+    def __init__(self, **kwargs):
         # Transaction
-        self.tx_version: bool = args.get("tx_version", False)
-        self.tx_locktime: bool = args.get("tx_locktime", False)
+        self.tx_version: bool = kwargs.get("tx_version", False)
+        self.tx_locktime: bool = kwargs.get("tx_locktime", False)
 
         # Inputs
-        # TODO: self.tx_in_count: int = args.get("tx_in_count", 0)
-        # TODO: self.invalid_tx_in_count: int = args.get("invalid_tx_in_count", 0)
+        # TODO: self.tx_in_count: int = kwargs.get("tx_in_count", 0)
+        # TODO: self.invalid_tx_in_count: int = kwargs.get("invalid_tx_in_count", 0)
 
-        self.tx_in_txid: bool = args.get("tx_in_txid", False)
-        # TODO: self.tx_in_vout: bool = args.get("tx_in_vout", False)
-        self.tx_in_script: bool = args.get("tx_in_script", False)
-        self.tx_in_sequence: bool = args.get("tx_in_sequence", False)
+        self.tx_in_txid: bool = kwargs.get("tx_in_txid", False)
+        # TODO: self.tx_in_vout: bool = kwargs.get("tx_in_vout", False)
+        self.tx_in_script: bool = kwargs.get("tx_in_script", False)
+        self.tx_in_sequence: bool = kwargs.get("tx_in_sequence", False)
 
         # Outputs
-        # TODO: self.tx_out_count: int = args.get("tx_out_count", 0)
-        # TODO: self.invalid_tx_out_count: int = args.get("invalid_tx_out_count", 0)
+        # TODO: self.tx_out_count: int = kwargs.get("tx_out_count", 0)
+        # TODO: self.invalid_tx_out_count: int = kwargs.get("invalid_tx_out_count", 0)
 
-        # TODO: self.tx_out_amount: bool = args.get("tx_out_amount", False)
-        self.tx_out_script_size: bool = args.get("tx_out_script_size", False)
-        self.tx_out_script: bool = args.get("tx_out_script", False)
+        # TODO: self.tx_out_amount: bool = kwargs.get("tx_out_amount", False)
+        # TODO: self.tx_out_script_size: bool = kwargs.get("tx_out_script_size", False)
+        self.tx_out_script: bool = kwargs.get("tx_out_script", False)
 
         # Witness
-        # TODO: self.tx_witness_count: int = args.get("tx_witness_count", 0)
-        # TODO: self.invalid_tx_witness_count: int = args.get("invalid_tx_witness_count", 0)
+        # TODO: self.tx_witness_count: int = kwargs.get("tx_witness_count", 0)
+        # TODO: self.invalid_tx_witness_count: int = kwargs.get("invalid_tx_witness_count", 0)
 
-        self.tx_witness_size: bool = args.get("tx_witness_size", False)
-        self.tx_witness_item: bool = args.get("tx_witness_item", False)
+        # TODO: self.tx_witness_size: bool = kwargs.get("tx_witness_size", False)
+        self.tx_witness_item: bool = kwargs.get("tx_witness_item", False)
 
-    def create_valid_tx() -> str:
+    def create_misfit_transaction(self) -> str:
+        raw_tx = self.create_valid_tx()
+        decoded_tx = self.split_transaction(raw_tx)
+        misfit_tx = self.replace_misfit(decoded_tx)
+        return self.assemble_transaction(decoded_tx)
+
+    def create_valid_tx(self) -> str:
+        # Check if bitcoind -regtest is running
+        try:
+            bcli("getblockchaininfo")
+        except:
+            sys.exit("No nodes detected, please run `bitcoind -regtest`.")
+
         # Create a wallet
-        print("Creating misfit-core wallet")
         try:
             bcli("createwallet misfit-wallet")
         except:
-            print("misfit-wallet already exists")
+            pass
+
+        # Loads misfit-wallet
+        try:
+            bcli("loadwallet misfit-wallet")
+        except:
+            pass
 
         # Generate new address for wallet
-        print("Generating new wallet")
-        addr = bcli("getnewaddress")
+        addr = bcli("getnewaddress misfit-wallet")
 
         # Generate funds to the address
-        print("Generating funds to the address")
         blockhash = json.loads(bcli(f"generatetoaddress 101 {addr}"))[0]
 
         # Get block data
-        print("Get block data")
         block = json.loads(bcli(f"getblock {blockhash} 2"))
 
         # Get transaction from block
         tx = block['tx'][0]
 
         # Create valid raw transaction
-        print("Creating a raw transaction")
         tx_in = json.dumps([{
             "txid": tx['txid'],
             "vout": tx['vout'][0]['n']
@@ -78,17 +85,15 @@ class CreateTx:
         raw_tx = bcli(f'createrawtransaction {tx_in} {tx_out}')
 
         # Sign transaction
-        print("Sign transaction")
         signed_tx = json.loads(
             bcli(f'signrawtransactionwithwallet {raw_tx}'))['hex']
 
         # Check if is valid tx
-        print("Checking if is valid transaction")
         json.loads(bcli(f'testmempoolaccept ["{signed_tx}"]'))[0]
 
         return raw_tx
 
-    def split_transaction(raw_tx: str) -> object:
+    def split_transaction(self, raw_tx: str) -> object:
         offset = 0
         txns = bytes.fromhex(raw_tx)
 
@@ -177,82 +182,64 @@ class CreateTx:
             "locktime": lock_time.hex()
         }
 
-    def replace_misfit(decoded_tx: object) -> object:
-        if self.version:
+    def replace_misfit(self, decoded_tx: object) -> object:
+        if self.tx_version:
             decoded_tx['version'] = randomize(decoded_tx['version'])
 
-        if self.locktime:
+        if self.tx_locktime:
             decoded_tx['locktime'] = randomize(decoded_tx['locktime'])
 
         if self.tx_in_txid:
-            for tx_in in decoded_tx['tx_in']:
-                tx_in = randomize(tx_in['previous_output'])
+            for x in decoded_tx['tx_in']:
+                x['previous_output'] = randomize(x['previous_output'])
+
+        if self.tx_in_script:
+            for x in decoded_tx['tx_in']:
+                x['signature_script'] = randomize(x['signature_script'])
+
+        if self.tx_in_sequence:
+            for x in decoded_tx['tx_in']:
+                x['sequence'] = randomize(x['sequence'])
+
+        if self.tx_out_script:
+            for x in decoded_tx['tx_out']:
+                x['pk_script'] = randomize(x['pk_script'])
+
+        if self.tx_witness_item:
+            for x in decoded_tx['witness']:
+                x['item'] = randomize(x['item'])
 
         return decoded_tx
 
-    def assemble_transaction(decoded_tx: object) -> str:
-        version = decoded_tx['version'].to_bytes(4, "little")
-        flags = bytes.fromhex("0001")
-        locktime = decoded_tx['locktime'].to_bytes(4, "little")
+    def assemble_transaction(self, decoded_tx: object) -> str:
+        version = decoded_tx['version']
+        marker = decoded_tx['marker']
+        flag = decoded_tx['flag']
+        locktime = decoded_tx['locktime']
 
         inputs = []
-        for input in decoded_tx['vin']:
-            txid = bytes.fromhex(input['txid'])
-            vout = input['vout'].to_bytes(4, "little")
-            script = bytes.fromhex(input['scriptSig']['hex'])
-            scriptlen = bytes([len(script)])
-            sequence = input['sequence'].to_bytes(4, 'little')
-            inputs.append(txid + vout + scriptlen + script + sequence)
+        for tx_in in decoded_tx['tx_in']:
+            inputs.append(''.join(str(value) for value in tx_in.values()))
 
         outputs = []
-        for output in decoded_tx['vout']:
-            amount = int(output['value'] * 100_000_000).to_bytes(8, 'little')
-            scriptpubkey = output['scriptPubKey']['hex']
-            scriptpubkeylen = bytes([len(scriptpubkey)])
-            outputs.append(amount + scriptpubkeylen + scriptpubkey)
+        for tx_out in decoded_tx['tx_out']:
+            inputs.append(''.join(str(value) for value in tx_out.values()))
 
         witnesses = []
-        for witness in decoded_tx['vout']:
-            amount = int(output['value'] * 100_000_000).to_bytes(8, 'little')
-            scriptpubkey = output['scriptPubKey']['hex']
-            scriptpubkeylen = bytes([len(scriptpubkey)])
-            outputs.append(amount + scriptpubkeylen + scriptpubkey)
+        for witness in decoded_tx['witness']:
+            inputs.append(''.join(str(value) for value in witness.values()))
 
         # [version] [flags] [inputs lenght] [inputs] [outputs lenght] [outputs] [witness] [locktime]
-        transaction = version + flags + len(inputs).to_bytes() + b''.join(inputs) + len(
-            outputs).to_bytes() + b''.join(outputs) + b''.join(witnesses) + locktime
-        return transaction.hex()
-
-# {
-#   "txid": "0776101a6c0378d142656035f87721aee8e20f8a7c41c3962ad02a3ca8c18a08",
-#   "hash": "0776101a6c0378d142656035f87721aee8e20f8a7c41c3962ad02a3ca8c18a08",
-#   "version": 2,
-#   "size": 82,
-#   "vsize": 82,
-#   "weight": 328,
-#   "locktime": 0,
-#   "vin": [
-#     {
-#       "txid": "d708f91be24be28416a37aa5255173941f597bd442e72293346e62af3c2482c7",
-#       "vout": 0,
-#       "scriptSig": {
-#         "asm": "",
-#         "hex": ""
-#       },
-#       "sequence": 4294967293
-#     }
-#   ],
-#   "vout": [
-#     {
-#       "value": 24.99,
-#       "n": 0,
-#       "scriptPubKey": {
-#         "asm": "0 98e036c901ea2d31bad07c9b086ec85427a87742",
-#         "desc": "addr(bcrt1qnrsrdjgpagknrwks0jdssmkg2sn6sa6z3e7m6v)#mvlsgpnt",
-#         "hex": "001498e036c901ea2d31bad07c9b086ec85427a87742",
-#         "address": "bcrt1qnrsrdjgpagknrwks0jdssmkg2sn6sa6z3e7m6v",
-#         "type": "witness_v0_keyhash"
-#       }
-#     }
-#   ]
-# }
+        transaction = ''.join([
+            version,
+            marker,
+            flag,
+            len(inputs).to_bytes().hex(),
+            ''.join(inputs),
+            len(outputs).to_bytes().hex(),
+            ''.join(outputs),
+            len(witnesses).to_bytes().hex(),
+            ''.join(witnesses),
+            locktime
+        ])
+        return transaction
