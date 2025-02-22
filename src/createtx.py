@@ -29,14 +29,14 @@ class CreateTx:
         # TODO: self.invalid_tx_out_count: int = args.get("invalid_tx_out_count", 0)
 
         # TODO: self.tx_out_amount: bool = args.get("tx_out_amount", False)
-        self.tx_out_script_size: bool = args.get("tx_out_script_size", False)
+        # TODO: self.tx_out_script_size: bool = args.get("tx_out_script_size", False)
         self.tx_out_script: bool = args.get("tx_out_script", False)
 
         # Witness
         # TODO: self.tx_witness_count: int = args.get("tx_witness_count", 0)
         # TODO: self.invalid_tx_witness_count: int = args.get("invalid_tx_witness_count", 0)
 
-        self.tx_witness_size: bool = args.get("tx_witness_size", False)
+        # TODO: self.tx_witness_size: bool = args.get("tx_witness_size", False)
         self.tx_witness_item: bool = args.get("tx_witness_item", False)
 
     def create_valid_tx() -> str:
@@ -185,8 +185,24 @@ class CreateTx:
             decoded_tx['locktime'] = randomize(decoded_tx['locktime'])
 
         if self.tx_in_txid:
-            for tx_in in decoded_tx['tx_in']:
-                tx_in = randomize(tx_in['previous_output'])
+            for x in decoded_tx['tx_in']:
+                x['previous_output'] = randomize(x['previous_output'])
+
+        if self.tx_in_script:
+            for x in decoded_tx['tx_in']:
+                x['signature_script'] = randomize(x['signature_script'])
+
+        if self.tx_in_sequence:
+            for x in decoded_tx['tx_in']:
+                x['sequence'] = randomize(x['sequence'])
+
+        if self.tx_out_script:
+            for x in decoded_tx['tx_out']:
+                x['pk_script'] = randomize(x['pk_script'])
+
+        if self.tx_witness_item:
+            for x in decoded_tx['witness']:
+                x['item'] = randomize(x['item'])
 
         return decoded_tx
 
@@ -222,37 +238,3 @@ class CreateTx:
         transaction = version + flags + len(inputs).to_bytes() + b''.join(inputs) + len(
             outputs).to_bytes() + b''.join(outputs) + b''.join(witnesses) + locktime
         return transaction.hex()
-
-# {
-#   "txid": "0776101a6c0378d142656035f87721aee8e20f8a7c41c3962ad02a3ca8c18a08",
-#   "hash": "0776101a6c0378d142656035f87721aee8e20f8a7c41c3962ad02a3ca8c18a08",
-#   "version": 2,
-#   "size": 82,
-#   "vsize": 82,
-#   "weight": 328,
-#   "locktime": 0,
-#   "vin": [
-#     {
-#       "txid": "d708f91be24be28416a37aa5255173941f597bd442e72293346e62af3c2482c7",
-#       "vout": 0,
-#       "scriptSig": {
-#         "asm": "",
-#         "hex": ""
-#       },
-#       "sequence": 4294967293
-#     }
-#   ],
-#   "vout": [
-#     {
-#       "value": 24.99,
-#       "n": 0,
-#       "scriptPubKey": {
-#         "asm": "0 98e036c901ea2d31bad07c9b086ec85427a87742",
-#         "desc": "addr(bcrt1qnrsrdjgpagknrwks0jdssmkg2sn6sa6z3e7m6v)#mvlsgpnt",
-#         "hex": "001498e036c901ea2d31bad07c9b086ec85427a87742",
-#         "address": "bcrt1qnrsrdjgpagknrwks0jdssmkg2sn6sa6z3e7m6v",
-#         "type": "witness_v0_keyhash"
-#       }
-#     }
-#   ]
-# }
