@@ -21,7 +21,6 @@ activate the venv
 ```b
 source .venv/bin/activate
 ``` 
-```
 Install the dependencies
 ```b
 pip install .
