@@ -3,36 +3,48 @@ import json
 
 
 class CreateTx:
-    def __init__(self, **args):
+    def __init__(self, **kwargs):
         # Transaction
-        self.tx_version: bool = args.get("tx_version", False)
-        self.tx_locktime: bool = args.get("tx_locktime", False)
+        self.tx_version: bool = kwargs.get("tx_version", False)
+        self.tx_locktime: bool = kwargs.get("tx_locktime", False)
 
         # Inputs
-        # TODO: self.tx_in_count: int = args.get("tx_in_count", 0)
-        # TODO: self.invalid_tx_in_count: int = args.get("invalid_tx_in_count", 0)
+        # TODO: self.tx_in_count: int = kwargs.get("tx_in_count", 0)
+        # TODO: self.invalid_tx_in_count: int = kwargs.get("invalid_tx_in_count", 0)
 
-        self.tx_in_txid: bool = args.get("tx_in_txid", False)
-        # TODO: self.tx_in_vout: bool = args.get("tx_in_vout", False)
-        self.tx_in_script: bool = args.get("tx_in_script", False)
-        self.tx_in_sequence: bool = args.get("tx_in_sequence", False)
+        self.tx_in_txid: bool = kwargs.get("tx_in_txid", False)
+        # TODO: self.tx_in_vout: bool = kwargs.get("tx_in_vout", False)
+        self.tx_in_script: bool = kwargs.get("tx_in_script", False)
+        self.tx_in_sequence: bool = kwargs.get("tx_in_sequence", False)
 
         # Outputs
-        # TODO: self.tx_out_count: int = args.get("tx_out_count", 0)
-        # TODO: self.invalid_tx_out_count: int = args.get("invalid_tx_out_count", 0)
+        # TODO: self.tx_out_count: int = kwargs.get("tx_out_count", 0)
+        # TODO: self.invalid_tx_out_count: int = kwargs.get("invalid_tx_out_count", 0)
 
-        # TODO: self.tx_out_amount: bool = args.get("tx_out_amount", False)
-        # TODO: self.tx_out_script_size: bool = args.get("tx_out_script_size", False)
-        self.tx_out_script: bool = args.get("tx_out_script", False)
+        # TODO: self.tx_out_amount: bool = kwargs.get("tx_out_amount", False)
+        # TODO: self.tx_out_script_size: bool = kwargs.get("tx_out_script_size", False)
+        self.tx_out_script: bool = kwargs.get("tx_out_script", False)
 
         # Witness
-        # TODO: self.tx_witness_count: int = args.get("tx_witness_count", 0)
-        # TODO: self.invalid_tx_witness_count: int = args.get("invalid_tx_witness_count", 0)
+        # TODO: self.tx_witness_count: int = kwargs.get("tx_witness_count", 0)
+        # TODO: self.invalid_tx_witness_count: int = kwargs.get("invalid_tx_witness_count", 0)
 
-        # TODO: self.tx_witness_size: bool = args.get("tx_witness_size", False)
-        self.tx_witness_item: bool = args.get("tx_witness_item", False)
+        # TODO: self.tx_witness_size: bool = kwargs.get("tx_witness_size", False)
+        self.tx_witness_item: bool = kwargs.get("tx_witness_item", False)
 
-    def create_valid_tx() -> str:
+    def create_misfit_transaction(self) -> str:
+        raw_tx = self.create_valid_tx()
+        decoded_tx = self.split_transaction(raw_tx)
+        misfit_tx = self.replace_misfit(decoded_tx)
+        return self.assemble_transaction(decoded_tx)
+
+    def create_valid_tx(self) -> str:
+        # Check if bitcoind -regtest is running
+        try:
+            bcli("getblockchaininfo")
+        except:
+            sys.exit("No nodes detected, please run `bitcoind -regtest`.")
+
         # Create a wallet
         print("Creating misfit-core wallet")
         try:
@@ -40,9 +52,16 @@ class CreateTx:
         except:
             print("misfit-wallet already exists")
 
+        # Loads misfit-wallet
+        print("Loading wallet")
+        try:
+            bcli("loadwallet misfit-wallet")
+        except:
+            print("misfit-wallet already loaded")
+
         # Generate new address for wallet
-        print("Generating new wallet")
-        addr = bcli("getnewaddress")
+        print("Generating new address")
+        addr = bcli("getnewaddress misfit-wallet")
 
         # Generate funds to the address
         print("Generating funds to the address")
@@ -81,7 +100,9 @@ class CreateTx:
 
         return raw_tx
 
-    def split_transaction(raw_tx: str) -> object:
+    def split_transaction(self, raw_tx: str) -> object:
+        print("Spliting raw transaction")
+
         offset = 0
         txns = bytes.fromhex(raw_tx)
 
@@ -170,12 +191,14 @@ class CreateTx:
             "locktime": lock_time.hex()
         }
 
-    def replace_misfit(decoded_tx: object) -> object:
-        if self.version:
+    def replace_misfit(self, decoded_tx: object) -> object:
+        print("Replacing parameters")
+
+        if self.tx_version:
             decoded_tx['version'] = randomize(decoded_tx['version'])
 
-        if self.locktime:
-            decoded_tx['lock_time'] = randomize(decoded_tx['lock_time'])
+        if self.tx_locktime:
+            decoded_tx['locktime'] = randomize(decoded_tx['locktime'])
 
         if self.tx_in_txid:
             for x in decoded_tx['tx_in']:
@@ -199,11 +222,13 @@ class CreateTx:
 
         return decoded_tx
 
-    def assemble_transaction(decoded_tx: object) -> str:
+    def assemble_transaction(self, decoded_tx: object) -> str:
+        print("Assembling transaction")
+
         version = decoded_tx['version']
         marker = decoded_tx['marker']
         flag = decoded_tx['flag']
-        locktime = decoded_tx['lock_time']
+        locktime = decoded_tx['locktime']
 
         inputs = []
         for tx_in in decoded_tx['tx_in']:
