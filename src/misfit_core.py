@@ -2,7 +2,6 @@ import argparse
 # from createblock import CreateBlock
 from src.createtx import CreateTx
 
-
 def main():
     parser = argparse.ArgumentParser(
         description="A tool for create specified invalid parameters for tests in bicoin.")
