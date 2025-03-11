@@ -15,7 +15,7 @@ uv run main.py
 
 and run the tests with:
 ```b
-uvx pytest  src/tests/*
+uv run runtest.py
 ```
 
 
