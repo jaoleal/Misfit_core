@@ -1,0 +1,9 @@
+[project]
+name = "misfit-core"
+version = "0.1.0"
+description = "A tool for create food for test'"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pytest==8.3.5",
+]
