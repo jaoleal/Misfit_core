@@ -1,3 +1,24 @@
+# for use UV (beta)
+First install uv:
+https://docs.astral.sh/uv/getting-started/installation/
+
+
+tham install the project:
+```b
+uv pip install .
+```
+
+tham run the project:
+```b
+uv run main.py
+```
+
+and run the tests with:
+```b
+uvx pytest  src/tests/*
+```
+
+
 # Misfit-Core
 
 A tool for create specified invalid parameters for tests in bicoin.
