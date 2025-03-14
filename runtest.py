@@ -1,16 +1,14 @@
+from importlib import import_module
+import sys
 import os
-import subprocess
+from src.test_case import Testrunner
 
 
-directory = './src/tests/'
+COMMANDS_DIR = "commands"
 
-file_py = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith('-test.py')]
+def main():
+    os.makedirs(COMMANDS_DIR, exist_ok=True)
+    sys.exit(Testrunner())
 
-
-for arquivo in arquivos_py:
-    caminho_completo = os.path.join(diretorio, arquivo)
-    print(f'Executando {caminho_completo}...')
-    try:
-        subprocess.run(['uvx','pytest', caminho_completo], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f'Erro ao executar {caminho_completo}: {e}')
+if __name__ == "__main__":
+    main()

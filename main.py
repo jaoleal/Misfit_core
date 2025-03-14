@@ -1,9 +1,6 @@
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
 from importlib import import_module
 import sys
 import os
-from typing import List, Optional
-
 from src.misfit_core import MisfitCore
 
 
