@@ -1,5 +1,7 @@
 import pytest
-from src.utils import merkleroot, reverse_bytes
+from importlib import import_module
+
+from src import merkleroot, reverse_bytes
 
 class TestExample:
     def merkleroot_test(self):

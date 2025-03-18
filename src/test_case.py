@@ -15,3 +15,6 @@ class Testrunner:
                 subprocess.run(['uvx','pytest', caminho_completo], check=True)
             except subprocess.CalledProcessError as e:
                 print(f'Erro ao executar {caminho_completo}: {e}')
+
+if __name__ == "__main__":
+    Testrunner.runner()
