@@ -11,3 +11,11 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 package=["src/"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  "."
+]
