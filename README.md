@@ -1,24 +1,3 @@
-# for use UV (beta)
-First install uv:
-https://docs.astral.sh/uv/getting-started/installation/
-
-
-tham install the project:
-```b
-uv pip install .
-```
-
-tham run the project:
-```b
-uv run main.py
-```
-
-and run the tests with:
-```b
-uv run runtest.py
-```
-
-
 # Misfit-Core
 
 A tool for create specified invalid parameters for tests in bicoin.
@@ -39,21 +18,17 @@ Enter the directory
 ```b
 cd Misfit_core
 ```
-Create a python venv to install dependecies
+Compile the project with Cargo
 ```b
-python3 -m venv .venv
+cargo build 
 ```
-activate the venv
+run the binary 
 ```b
-source .venv/bin/activate
-``` 
-Install the dependencies
-```b
-pip install .
+./target/debug/Misfit_core 
 ```
-And run like a normal cli
+Or run with the cargo 
 ```b
-misfit-core
+cargo run -- --"flag you want to use" "another flags or arguments"
 ```
 ### Basic usage
 
