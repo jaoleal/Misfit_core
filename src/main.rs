@@ -11,27 +11,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Tx {
-        #[arg(short, long)]
-        input: String
-    },
-    Block {
-        #[arg(short, long)]
-        data: String
-    },
+    Numberoftxs {
+        input1: i32 // Positional argument (no flags)
+    }
 }
 
 fn main() {
     let cli = Cli::parse();
-    let generator = Generator::new();
-
     match cli.command {
-        Commands::Tx { input } => {
-            let result = generator.generatetx(input);
-            println!("{}", result);
-        }
-        Commands::Block { data } => {
-            let result = generator.generateblock(data);
+        Commands::Numberoftxs { input1 } => {
+            let result = Generator::generate_from_input(input1);
             println!("{}", result);
         }
     }
