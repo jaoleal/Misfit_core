@@ -1,22 +1,38 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
+mod generator;
+use generator::generator::Generator;
 
-/// Simple program to greet a person
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(version, about, long_about = None)]
-struct Args {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    name: String,
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
+#[derive(Subcommand)]
+enum Commands {
+    Tx {
+        #[arg(short, long)]
+        input: String
+    },
+    Block {
+        #[arg(short, long)]
+        data: String
+    },
 }
 
 fn main() {
-    let args = Args::parse();
+    let cli = Cli::parse();
+    let generator = Generator::new();
 
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name);
+    match cli.command {
+        Commands::Tx { input } => {
+            let result = generator.generatetx(input);
+            println!("{}", result);
+        }
+        Commands::Block { data } => {
+            let result = generator.generateblock(data);
+            println!("{}", result);
+        }
     }
 }
