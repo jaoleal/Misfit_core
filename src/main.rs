@@ -12,8 +12,10 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Numberoftxs {
-        input1: i32 // Positional argument (no flags)
+        input1: i32 // Self anotation, for now the only required input is the number of txs thats define if you take a tx or a block
+                    // but in the future the user will need input the campus to break and the kind of transaction... 
     }
+
 }
 
 fn main() {

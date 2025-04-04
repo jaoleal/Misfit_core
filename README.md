@@ -28,7 +28,7 @@ run the binary
 ```
 Or run with the cargo 
 ```b
-cargo run -- --"flag you want to use" "another flags or arguments"
+cargo run -- -- numberoftxs "the number of txs numeric"
 ```
 ### Basic usage
 
