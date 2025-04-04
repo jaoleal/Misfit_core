@@ -1,10 +1,12 @@
+use super::generate_tx::generate_tx;
 pub struct Generator {
 }
-
+pub struct process_input{
+}
 impl Generator {
     pub fn generate_from_input(input:i32) -> String{
         if input == 1{
-            let (raw_tx, txid) = process_input::generatetx();
+            let (raw_tx, txid) = process_input::generate_tx();
             let final_structured: String = [format!("Raw Transaction 🥩: {}", raw_tx).to_string() , format!("TXID 🪪 : {}", txid).to_string()].join("\n---\n");
             final_structured
         }else if input > 1{
@@ -13,83 +15,22 @@ impl Generator {
             return "Your input is invalid, try again with a valid number of transactions 😕".to_string()
         }
     }
-}
-
-//this will work for now but when process another types of transactions like pwsh and taproot we probably will need to isolate the generatetx for process the more inputs
-pub mod process_input{
-    use bitcoin::{
-        consensus::encode,
-        hashes::Hash,
-        locktime::absolute,
-        secp256k1::{rand, Message, Secp256k1, SecretKey},
-        sighash::{EcdsaSighashType, SighashCache},
-        transaction, Address, Amount, Network, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid, Witness,
-    };
-    pub fn generatetx() -> (String, String) {
-            const DUMMY_UTXO_AMOUNT: Amount = Amount::from_sat(20_000_000);
-            const SPEND_AMOUNT: Amount = Amount::from_sat(5_000_000);
-            const CHANGE_AMOUNT: Amount = Amount::from_sat(14_999_000);
-
-            // Initialize cryptographic context
-            let secp = Secp256k1::new();
-            
-            // Generate sender keys and address
-            let sender_sk = SecretKey::new(&mut rand::thread_rng());
-            let sender_pubkey = bitcoin::PublicKey::new(sender_sk.public_key(&secp));
-            let sender_wpkh = sender_pubkey.wpubkey_hash().expect("Compressed key");
-            let sender_script = ScriptBuf::new_p2wpkh(&sender_wpkh);
-            let receiver_address = Address::p2pkh(&sender_pubkey, Network::Bitcoin);
-
-            // Build unsigned transaction
-            let mut tx = Transaction {
-                version: transaction::Version::TWO,
-                lock_time: absolute::LockTime::ZERO,
-                input: vec![TxIn {
-                    previous_output: OutPoint { txid: Txid::all_zeros(), vout: 0 },
-                    script_sig: ScriptBuf::default(),
-                    sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
-                    witness: Witness::default(),
-                }],
-                output: vec![
-                    TxOut { 
-                        value: SPEND_AMOUNT,
-                        script_pubkey: receiver_address.script_pubkey(),
-                    },
-                    TxOut {
-                        value: CHANGE_AMOUNT,
-                        script_pubkey: sender_script.clone(),
-                    },
-                ],
-            };
-
-            // Generate signature
-            let mut sighasher = SighashCache::new(&mut tx);
-            let sighash = sighasher
-                .p2wpkh_signature_hash(0, &sender_script, DUMMY_UTXO_AMOUNT, EcdsaSighashType::All)
-                .expect("Sighash creation failed");
-
-            let signature = secp.sign_ecdsa(&Message::from(sighash), &sender_sk);
-            let signed_sig = bitcoin::ecdsa::Signature { 
-                signature, 
-                sighash_type: EcdsaSighashType::All 
-            };
-
-            // Apply witness
-            let pk = sender_sk.public_key(&secp);    
-            *sighasher.witness_mut(0).unwrap() = Witness::p2wpkh(&signed_sig, &pk);
-            let signed_tx = sighasher.into_transaction();
-
-            //println!("Structuctured TX 📝 : {:#?}", signed_tx);
-            let raw_transaction = hex::encode(encode::serialize(&signed_tx));
-            let txid = signed_tx.compute_txid();   
-            
-            return (raw_transaction.to_string() , txid.to_string())
-}
-    
-    
-    pub fn generateblock(input:i32) -> String {
-        format!("Sorry, we cant process more than one transaction in Blocks for now so your {} transactions need to wait 😥", input).to_string()
+    pub fn proces_flags_to_broke(flags:Vec<String>) ->String{
+        let mut flags_concateneted = "".to_string();
+        for c in flags{
+            flags_concateneted += &c;
+        }
+        return format!("Wen cant process you flags for now {}",flags_concateneted ).to_string()
     }
 }
 
+impl process_input{
+    pub fn generate_tx()->(String, String){ //here process the input to choose the type of tx   
+        generate_tx::generate_simple_p2wpkh()
+    }
 
+    //this will need to call the thrait generate_tx in many ways so maybe needs a file too
+    pub fn generateblock(input:i32) -> String {
+        format!("Sorry, we cant process more than one transaction in blocks for now so your {} transactions need to wait 😥", input).to_string()
+    }
+}
