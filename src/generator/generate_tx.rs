@@ -7,10 +7,10 @@ use bitcoin::{
     transaction, Address, Amount, Network, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid, Witness,
 };
 
-pub struct generate_tx{
+pub struct GenerateTx{
 }
 
-impl generate_tx{
+impl GenerateTx{
     //here i can call the other types of functions to create the other types of transaction,
     pub fn generate_simple_p2wpkh() -> (String, String) {
             const DUMMY_UTXO_AMOUNT: Amount = Amount::from_sat(20_000_000);

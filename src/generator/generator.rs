@@ -1,17 +1,18 @@
-use super::generate_tx::generate_tx;
+use super::generate_tx::GenerateTx;
+use super::generate_blocks::GenerateBlock;
 pub struct Generator {
 }
-pub struct process_input{
+pub struct ProcessInput{
 }
 impl Generator {
     pub fn generate_from_input(input:i32) -> String{
         if input == 1{
-            let (raw_tx, txid) = process_input::generate_tx();
+            let (raw_tx, txid) = ProcessInput::generate_tx();
             let final_structured: String = [format!("Raw Transaction 🥩: {}", raw_tx).to_string() , format!("TXID 🪪 : {}", txid).to_string()].join("\n---\n");
             final_structured
         }else if input > 1{
-            return process_input::generateblock(input)
-        }else{
+            return "not making blocks yet".to_string()
+            }else{
             return "Your input is invalid, try again with a valid number of transactions 😕".to_string()
         }
     }
@@ -24,13 +25,14 @@ impl Generator {
     }
 }
 
-impl process_input{
+impl ProcessInput{
     pub fn generate_tx()->(String, String){ //here process the input to choose the type of tx   
-        generate_tx::generate_simple_p2wpkh()
+        GenerateTx::generate_simple_p2wpkh()
     }
 
     //this will need to call the thrait generate_tx in many ways so maybe needs a file too
-    pub fn generateblock(input:i32) -> String {
-        format!("Sorry, we cant process more than one transaction in blocks for now so your {} transactions need to wait 😥", input).to_string()
+    pub fn generateblock(txids:Vec<String>) -> String {
+        let block_header = GenerateBlock::new(txids);
+        format!("{:#?}",block_header)
     }
 }

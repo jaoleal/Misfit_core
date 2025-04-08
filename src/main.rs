@@ -3,6 +3,7 @@ mod generator;
 use generator::generator::Generator;
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
+
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -10,27 +11,45 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Numberoftxs {
-        txscount: i32 
-                    // Self anotation, for now the only required input is the number of txs thats define if you take a tx or a block
-                    // but in the future the user will need input the campus to break and the kind of transaction... 
-    },
-    CampusToBreak{
-        listedcampus:Vec<String>
-    }
+    /// Specify the number of transactions and optionally break campuses
+    Numberoftxs(NumberoftxsArgs),
+}
 
+#[derive(Parser)]
+struct NumberoftxsArgs {
+    /// Number of transactions, defaults to 1
+    #[arg(default_value_t = 1)]
+    txscount: i32,
+    #[command(subcommand)]
+    campus_command: Option<CampusSubcommands>,
+}
+
+#[derive(Subcommand)]
+enum CampusSubcommands {
+    /// List campuses to break
+    CampusToBreak { listedcampus: Vec<String> },
 }
 
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Numberoftxs { txscount } => {
+        Commands::Numberoftxs(args) => {
+            let txscount = args.txscount;
             let input_txs_count = Generator::generate_from_input(txscount);
-            println!("{}", input_txs_count);
-        },
-        Commands::CampusToBreak { listedcampus } =>{
-            let input_listedcampus = Generator::proces_flags_to_broke(listedcampus);
-            println!("{}", input_listedcampus)
+            
+            if let Some(campus_command) = args.campus_command {
+                match campus_command {
+                    CampusSubcommands::CampusToBreak { listedcampus } => {
+                        let input_listedcampus = Generator::proces_flags_to_broke(listedcampus);
+                        println!(
+                            "Transactions: {}\n---\n Campuses: {}",
+                            input_txs_count, input_listedcampus
+                        );
+                    }
+                }
+            } else {
+                println!("{}", input_txs_count);
+            }
         }
     }
 }
