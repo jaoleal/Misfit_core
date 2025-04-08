@@ -3,7 +3,6 @@ mod generator;
 use generator::generator::Generator;
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
-
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -12,11 +11,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Specify the number of transactions and optionally break campuses
-    Numberoftxs(NumberoftxsArgs),
+    New(New),
 }
 
 #[derive(Parser)]
-struct NumberoftxsArgs {
+struct New {
     /// Number of transactions, defaults to 1
     #[arg(default_value_t = 1)]
     txscount: i32,
@@ -26,23 +25,23 @@ struct NumberoftxsArgs {
 
 #[derive(Subcommand)]
 enum CampusSubcommands {
-    /// List campuses to break
-    CampusToBreak { listedcampus: Vec<String> },
+    /// use with "new "number of txs" update-with-flags"
+    UpdateWithFlags { listedcampus: Vec<String> },
 }
 
 fn main() {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Numberoftxs(args) => {
+        Commands::New(args) => {
             let txscount = args.txscount;
             let input_txs_count = Generator::generate_from_input(txscount);
             
             if let Some(campus_command) = args.campus_command {
                 match campus_command {
-                    CampusSubcommands::CampusToBreak { listedcampus } => {
+                    CampusSubcommands::UpdateWithFlags { listedcampus } => {
                         let input_listedcampus = Generator::proces_flags_to_broke(listedcampus);
                         println!(
-                            "Transactions: {}\n---\n Campuses: {}",
+                            "New: {}\n---\n Updated with flaws: {}",
                             input_txs_count, input_listedcampus
                         );
                     }
