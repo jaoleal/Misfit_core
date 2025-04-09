@@ -5,14 +5,14 @@ use hex;
 
 #[derive(Debug)]
 pub struct GenerateBlock {
-    pub version: u32,
-    pub prev_block_hash: String,
-    pub merkle_root: String,
-    pub timestamp: u32,
-    pub bits: u32,
-    pub nonce: u32,
-    pub transaction_count: u32,
-    pub block_header: String,
+    pub _version: u32,
+    pub _prev_block_hash: String,
+    pub _merkle_root: String,
+    pub _timestamp: u32,
+    pub _bits: u32,
+    pub _nonce: u32,
+    pub _transaction_count: u32,
+    pub _block_header: String,
 }
 
 impl GenerateBlock {
@@ -43,14 +43,14 @@ impl GenerateBlock {
         let block_header = hex::encode(header_bytes);
 
         GenerateBlock {
-            version: 1,
-            prev_block_hash,
-            merkle_root,
-            timestamp,
-            bits: bits.try_into().unwrap(),
-            nonce: nonce.try_into().unwrap(),
-            transaction_count,
-            block_header,
+            _version: 1,
+            _prev_block_hash: prev_block_hash,
+            _merkle_root: to_little_endian(&merkle_root),
+            _timestamp: timestamp,
+            _bits: bits.try_into().unwrap(),
+            _nonce: nonce.try_into().unwrap(),
+            _transaction_count:transaction_count,
+            _block_header:block_header,
         }
     }
 }

@@ -17,8 +17,8 @@ impl Generator {
                 raw_tx.push(new_raw_tx);
                 txid.push(new_txid);
             }
-            let block_header =GenerateBlock::new(raw_tx.clone());
-            let final_structured = [format!("Blockheader Info 🧊: {:#?} ", block_header),format!("Raw transactions used in it:{:#?}", raw_tx)].join("\n---\n");
+            let block_header =GenerateBlock::new(txid.clone());
+            let final_structured = [format!("Blockheader Info 🧊: {:#?} ", block_header),format!("Raw transactions used in it:{:#?}", raw_tx),format!("Used Txids: {:#?}", txid)].join("\n---\n");
             final_structured
             }else{
             return "Your input is invalid, try again with a valid number of transactions 😕".to_string()
