@@ -28,7 +28,7 @@ run the binary
 ```
 Or run with the cargo 
 ```b
-cargo run -- -- numberoftxs "the number of txs numeric"
+cargo run new "the number of txs numeric"
 ```
 ### Basic usage
 
