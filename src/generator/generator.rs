@@ -4,15 +4,14 @@ pub struct Generator {}
 
 impl Generator {
     pub fn generate_from_input(input: i32) -> String {
-        return match input {
+        match input {
             1 => {
                 let (raw_tx, txid) = GenerateTx::generate_simple_p2wpkh();
-                let final_structured: String = [
+                [
                     format!("Raw Transaction 🥩: {}", raw_tx).to_string(),
                     format!("TXID 🪪 : {}", txid).to_string(),
                 ]
-                .join("\n---\n");
-                final_structured
+                .join("\n---\n")
             }
             n if n > 1 => {
                 //if the user request more than one transaction we return a block
@@ -27,17 +26,16 @@ impl Generator {
 
                 let block_header = GenerateBlock::new(txid.clone());
 
-                let final_structured: String = [
+                [
                     format!("Blockheader Info 🧊: {:#?} ", block_header),
                     format!("Raw transactions used in it:{:#?}", raw_tx),
                     format!("Used Txids: {:#?}", txid),
                 ]
-                .join("\n---\n");
-                final_structured
+                .join("\n---\n")
             }
             _ => "Your input is invalid, try again with a valid number of transactions 😕"
                 .to_string(),
-        };
+        }
     }
 
     pub fn proces_flags_to_broke(flags: Vec<String>) -> String {
@@ -47,6 +45,6 @@ impl Generator {
             flags_concateneted += &c;
         }
 
-        return format!("When cant process you flags for now {}", flags_concateneted).to_string();
+        format!("When cant process you flags for now {}", flags_concateneted).to_string()
     }
 }
