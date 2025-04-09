@@ -18,21 +18,17 @@ Enter the directory
 ```b
 cd Misfit_core
 ```
-Create a python venv to install dependecies
+Compile the project with Cargo
 ```b
-python3 -m venv .venv
+cargo build 
 ```
-activate the venv
+run the binary 
 ```b
-source .venv/bin/activate
-``` 
-Install the dependencies
-```b
-pip install .
+./target/debug/Misfit_core 
 ```
-And run like a normal cli
+Or run with the cargo 
 ```b
-misfit-core
+cargo run -- -- numberoftxs "the number of txs numeric"
 ```
 ### Basic usage
 
