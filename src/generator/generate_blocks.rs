@@ -71,6 +71,7 @@ fn hash256(hex: &str) -> String {
     let bytes = hex::decode(hex).unwrap();
     let first = Sha256::digest(&bytes);
     let second = Sha256::digest(first);
+
     hex::encode(second)
 }
 
@@ -79,31 +80,41 @@ fn merkleroot(txids: Vec<String>) -> String {
         .into_iter()
         .map(|hex| to_little_endian(&hex))
         .collect();
+
     compute_merkle_root(txids_le)
 }
 
-fn compute_merkle_root(mut hashes: Vec<String>) -> String {
-    if hashes.is_empty() {
-        return String::from("0000000000000000000000000000000000000000000000000000000000000000");
+fn compute_merkle_root(hashes: Vec<String>) -> String {
+    match hashes.len() {
+        0 => String::from("0000000000000000000000000000000000000000000000000000000000000000"),
+
+        1 => hashes[0].clone(),
+
+        len => {
+            let mut hashes = hashes.clone();
+
+            // If len is odd, duplicate last hash
+            if len % 2 != 0 {
+                let last = hashes.last().unwrap().clone();
+                hashes.push(last);
+            }
+
+            let mut next_level = Vec::new();
+
+            for i in (0..hashes.len()).step_by(2) {
+                let pair = format!("{}{}", hashes[i], hashes[i + 1]);
+                next_level.push(hash256(&pair));
+            }
+
+            compute_merkle_root(next_level)
+        }
     }
-    if hashes.len() == 1 {
-        return hashes[0].clone();
-    }
-    if hashes.len() % 2 != 0 {
-        let last = hashes.last().unwrap().clone();
-        hashes.push(last);
-    }
-    let mut next_level = Vec::new();
-    for i in (0..hashes.len()).step_by(2) {
-        let pair = format!("{}{}", hashes[i], hashes[i + 1]);
-        next_level.push(hash256(&pair));
-    }
-    compute_merkle_root(next_level)
 }
 
 fn generate_random_bitcoin_block_hash() -> String {
     let mut rng = rand::rng();
     let mut bytes = [0u8; 32];
+
     rng.fill(&mut bytes);
     hex::encode(bytes) // Original byte order
 }
