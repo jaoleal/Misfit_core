@@ -51,6 +51,7 @@ impl GenerateTx {
                 },
             ],
         };
+
         // Generate signature
         let mut sighasher = SighashCache::new(&mut tx);
         let sighash = sighasher
