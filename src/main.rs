@@ -34,6 +34,7 @@ fn print_help() {
 fn main() {
     loop {
         println!("Enter command ('help' for options, 'finalize' to exit):");
+
         let mut input = String::new();
         io::stdin()
             .read_line(&mut input)
@@ -77,5 +78,6 @@ fn main() {
             Commands::Finalize => break,
         }
     }
+
     println!("Program finalized");
 }
