@@ -34,8 +34,11 @@ fn print_help() {
 fn main() {
     loop {
         println!("Enter command ('help' for options, 'finalize' to exit):");
+
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Failed to read line");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
         let input = input.trim();
 
         if input.is_empty() {
@@ -54,10 +57,13 @@ fn main() {
         match cli.command {
             Commands::New { txscount, campuses } => {
                 let transactions = Generator::generate_from_input(txscount);
-                
+
                 if !campuses.is_empty() {
                     let processed_campuses = Generator::proces_flags_to_broke(campuses);
-                    println!("Transactions: {}\nCampuses: {}", transactions, processed_campuses);
+                    println!(
+                        "Transactions: {}\nCampuses: {}",
+                        transactions, processed_campuses
+                    );
                 } else {
                     println!("Transactions: {}", transactions);
                 }
@@ -72,5 +78,6 @@ fn main() {
             Commands::Finalize => break,
         }
     }
+
     println!("Program finalized");
 }
