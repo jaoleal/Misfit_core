@@ -13,6 +13,7 @@ impl Generator {
                 ]
                 .join("\n---\n")
             }
+
             n if n > 1 => {
                 //if the user request more than one transaction we return a block
                 let mut raw_tx: Vec<String> = vec![];
@@ -33,6 +34,7 @@ impl Generator {
                 ]
                 .join("\n---\n")
             }
+
             _ => "Your input is invalid, try again with a valid number of transactions 😕"
                 .to_string(),
         }
