@@ -51,5 +51,4 @@ impl Generator {
         format!("When cant process you flags for now {}", flags_concateneted).to_string()
     }
 
-
 }

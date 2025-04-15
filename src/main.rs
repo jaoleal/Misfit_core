@@ -32,18 +32,15 @@ fn print_help() {
     println!("Available commands:\n");
     println!("new <txscount> [campuses...]  - Generate a transaction, or a block for more than one transaction");
     println!("clear                         - Clear terminal screen");
-    println!("get-block-by-height <height>     - Get a block at specific height in the regtest");
+    println!("get-blockby-height <height>   - Get a block at specific height in the regtest");
     println!("regtest-start                 - Start the regtest node");
-    println!("regtest-stop                  - Stop the regtest node");
+    println!("regtest-stop                  - Stop the regtest node(please rember stop before close the program)");
     println!("help                          - Show help message");
     println!("finalize                      - Exit the program\n");
 }
 
-const WALLET_NAME: &str = "bitcoinhos";
-const REGTEST_ARG: &str = "-regtest";
-
 fn main() {
-    let regtest_manager = RegtestManager::new(WALLET_NAME, REGTEST_ARG);
+    let regtest_manager = RegtestManager::new("bitcoinhos", "-regtest");
 
     loop {
         print!("> ");
@@ -86,12 +83,11 @@ fn main() {
             Commands::Finalize => break,
         }
     }
-
     println!("Program finalized");
 }
 
 fn handle_result(result: Result<(), Box<dyn std::error::Error>>) {
     if let Err(e) = result {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {} 🚨", e);
     }
 }
