@@ -48,7 +48,7 @@ fn main() {
 
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("Failed to read line");
-        let args: Vec<&str> = input.trim().split_whitespace().collect();
+        let args: Vec<&str> = input.split_whitespace().collect();
 
         if args.is_empty() {
             continue;
@@ -83,7 +83,7 @@ fn main() {
             Commands::Finalize => break,
         }
     }
-    println!("Program finalized");
+    println!("Program finalized 👋");
 }
 
 fn handle_result(result: Result<(), Box<dyn std::error::Error>>) {

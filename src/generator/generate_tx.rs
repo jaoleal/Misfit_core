@@ -25,7 +25,7 @@ impl GenerateTx{
             let sender_pubkey = bitcoin::PublicKey::new(sender_sk.public_key(&secp));
             let sender_wpkh = sender_pubkey.wpubkey_hash().expect("Compressed key");
             let sender_script = ScriptBuf::new_p2wpkh(&sender_wpkh);
-            let receiver_address = Address::p2pkh(&sender_pubkey, Network::Bitcoin);
+            let receiver_address = Address::p2pkh(sender_pubkey, Network::Bitcoin);
 
             // Build unsigned transaction
             let mut tx = Transaction {
@@ -69,9 +69,9 @@ impl GenerateTx{
             let raw_transaction = hex::encode(encode::serialize(&signed_tx));
             let txid = signed_tx.compute_txid();   
             
-            return (raw_transaction.to_string() , txid.to_string())
+            (raw_transaction.to_string() , txid.to_string())
 }
- 
+    
 }
 
 
