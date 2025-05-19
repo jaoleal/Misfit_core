@@ -3,7 +3,7 @@ use super::generate_tx::GenerateTx;
 pub struct Generator {}
 
 impl Generator {
-    pub fn generate_from_input(input: i32) -> String {
+    pub fn generate(input: i32) -> String {
         match input {
             1 => {
                 let (raw_tx, txid) = GenerateTx::generate_simple_p2wpkh();

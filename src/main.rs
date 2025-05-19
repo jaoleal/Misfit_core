@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use std::io;
 use std::io::Write;
 mod generator;
-use generator::generator::Generator;
+use generator::regtest::RegtestManager;
 
 #[derive(Parser)]
 #[command(version, about, disable_help_subcommand = true)]
@@ -18,6 +18,11 @@ enum Commands {
         txscount: i32,
         campuses: Vec<String>,
     },
+    GetBlockbyHeight {
+        height: u64,
+    },
+    RegtestStart,
+    RegtestStop,
     Clear,
     Help,
     Finalize,
@@ -25,27 +30,30 @@ enum Commands {
 
 fn print_help() {
     println!("Available commands:\n");
-    println!("new <txscount> [campuses...]  - generate a transaction, or a block for more than one transaction");
+    println!("new <txscount> [campuses...]  - Generate a transaction, or a block for more than one transaction");
     println!("clear                         - Clear terminal screen");
-    println!("help                          - give you some help");
+    println!("get-blockby-height <height>   - Get a block at specific height in the regtest");
+    println!("regtest-start                 - Start the regtest node");
+    println!("regtest-stop                  - Stop the regtest node(please rember stop before close the program)");
+    println!("help                          - Show help message");
     println!("finalize                      - Exit the program\n");
 }
 
 fn main() {
+    let regtest_manager = RegtestManager::new("bitcoinhos", "-regtest");
+
     loop {
-        println!("Enter command ('help' for options, 'finalize' to exit):");
+        print!("> ");
+        io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
-        let input = input.trim();
+        io::stdin().read_line(&mut input).expect("Failed to read line");
+        let args: Vec<&str> = input.split_whitespace().collect();
 
-        if input.is_empty() {
+        if args.is_empty() {
             continue;
         }
 
-        let args: Vec<&str> = input.split_whitespace().collect();
         let cli = match Cli::try_parse_from(std::iter::once("").chain(args.iter().copied())) {
             Ok(c) => c,
             Err(e) => {
@@ -56,14 +64,10 @@ fn main() {
 
         match cli.command {
             Commands::New { txscount, campuses } => {
-                let transactions = Generator::generate_from_input(txscount);
-
+                let transactions = generator::generator::Generator::generate(txscount);
                 if !campuses.is_empty() {
-                    let processed_campuses = Generator::proces_flags_to_broke(campuses);
-                    println!(
-                        "Transactions: {}\nCampuses: {}",
-                        transactions, processed_campuses
-                    );
+                    let processed_campuses = generator::generator::Generator::proces_flags_to_broke(campuses);
+                    println!("Transactions: {}\nCampuses: {}", transactions, processed_campuses);
                 } else {
                     println!("Transactions: {}", transactions);
                 }
@@ -72,12 +76,18 @@ fn main() {
                 print!("\x1B[2J\x1B[1;1H");
                 io::stdout().flush().unwrap();
             }
-            Commands::Help => {
-                print_help();
-            }
+            Commands::RegtestStart => handle_result(regtest_manager.start()),
+            Commands::RegtestStop => handle_result(regtest_manager.stop()),
+            Commands::GetBlockbyHeight { height } => handle_result(regtest_manager.handle_getblockbyheight(height)),
+            Commands::Help => print_help(),
             Commands::Finalize => break,
         }
     }
+    println!("Program finalized 👋");
+}
 
-    println!("Program finalized");
+fn handle_result(result: Result<(), Box<dyn std::error::Error>>) {
+    if let Err(e) = result {
+        eprintln!("Error: {} 🚨", e);
+    }
 }
