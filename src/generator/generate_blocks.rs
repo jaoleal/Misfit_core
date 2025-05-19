@@ -71,6 +71,7 @@ fn hash256(hex: &str) -> String {
     let bytes = hex::decode(hex).unwrap();
     let first = Sha256::digest(&bytes);
     let second = Sha256::digest(first);
+    hex::encode(second)
 }
 
 fn merkleroot(txids: Vec<String>) -> String {
