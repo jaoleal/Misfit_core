@@ -3,41 +3,41 @@ use super::generate_tx::GenerateTx;
 pub struct Generator {}
 
 impl Generator {
-    pub fn generate(input: i32) -> String {
-        match input {
-            1 => {
-                let (raw_tx, txid) = GenerateTx::generate_simple_p2wpkh();
-                [
-                    format!("Raw Transaction 🥩: {}", raw_tx).to_string(),
-                    format!("TXID 🪪 : {}", txid).to_string(),
-                ]
-                .join("\n---\n")
-            }
+    pub fn block(tx_count: u32) -> String {
+        let mut raw_tx: Vec<String> = vec![];
+        let mut txid: Vec<String> = vec![];
 
-            n if n > 1 => {
-                //if the user request more than one transaction we return a block
-                let mut raw_tx: Vec<String> = vec![];
-                let mut txid: Vec<String> = vec![];
-
-                for _c in 0..input {
-                    let (new_raw_tx, new_txid) = GenerateTx::generate_simple_p2wpkh();
-                    raw_tx.push(new_raw_tx);
-                    txid.push(new_txid);
-                }
-
-                let block_header = GenerateBlock::new(txid.clone());
-
-                [
-                    format!("Blockheader Info 🧊: {:#?} ", block_header),
-                    format!("Raw transactions used in it:{:#?}", raw_tx),
-                    format!("Used Txids: {:#?}", txid),
-                ]
-                .join("\n---\n")
-            }
-
-            _ => "Your input is invalid, try again with a valid number of transactions 😕"
-                .to_string(),
+        for _c in 0..tx_count {
+            let (new_raw_tx, new_txid) = GenerateTx::generate_simple_p2wpkh();
+            raw_tx.push(new_raw_tx);
+            txid.push(new_txid);
         }
+
+        let block_header = GenerateBlock::new(txid.clone());
+
+        [
+            format!("Blockheader Info 🧊: {:#?} ", block_header),
+            format!("Raw transactions used in it:{:#?}", raw_tx),
+            format!("Used Txids: {:#?}", txid),
+        ]
+        .join("\n---\n")
+    }
+
+    pub fn transaction(count: u32) -> String {
+        let mut raw_tx: Vec<String> = vec![];
+        let mut txid: Vec<String> = vec![];
+
+        for _c in 0..count {
+            let (new_raw_tx, new_txid) = GenerateTx::generate_simple_p2wpkh();
+            raw_tx.push(new_raw_tx);
+            txid.push(new_txid);
+        }
+
+        [
+            format!("Raw Transactions: {:#?}", raw_tx),
+            format!("TXIDs: {:#?}", txid),
+        ]
+        .join("\n---\n")
     }
 
     pub fn proces_flags_to_broke(flags: Vec<String>) -> String {
