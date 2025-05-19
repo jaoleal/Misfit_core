@@ -1,4 +1,3 @@
-
 use super::generate_blocks::GenerateBlock;
 use super::generate_tx::GenerateTx;
 pub struct Generator {}
@@ -50,5 +49,4 @@ impl Generator {
 
         format!("When cant process you flags for now {}", flags_concateneted).to_string()
     }
-
 }

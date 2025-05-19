@@ -8,7 +8,7 @@ build/
 #
 # already existing elements were commented out
 
-#/target
+target
 
 
 # Added by cargo

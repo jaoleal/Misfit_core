@@ -28,8 +28,10 @@ run the binary
 ```
 Or run with the cargo 
 ```b
-cargo run new "the number of txs numeric"
+cargo run
 ```
+For now the flags are not working are just here to develop anotation 
+
 ### Basic usage
 
 <u>Usage:</u> `misfit-core [OPTIONS] <COMMAND>`
