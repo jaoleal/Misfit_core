@@ -68,15 +68,33 @@ impl GenerateTx {
 
     // Return random valid input
     pub fn random_input(params: InputParams) -> TxIn {
-        let outpoint = params.outpoint.unwrap_or_else(|| OutPoint {
-            txid: Txid::all_zeros(),
-            vout: rand::thread_rng().gen::<u32>(),
+        let outpoint = params.outpoint.unwrap_or_else(|| {
+            // Create a random transaction for use as outpoint
+            let tx_id = Self::random_tx(TxParams {
+                version: None,
+                lock_time: None,
+                input: Some(InputParams {
+                    outpoint: Some(OutPoint {
+                        txid: Txid::all_zeros(),
+                        vout: rand::thread_rng().gen::<u32>(),
+                    }),
+                    script: None,
+                    sequence: None,
+                    witness: None
+                }),
+                output: None,
+            }).compute_txid();
+
+            return OutPoint {
+                txid: tx_id,
+                vout: rand::thread_rng().gen::<u32>(),
+            };
         });
-        let script = params.script.unwrap_or_else(|| ScriptBuf::default());
+        let script = params.script.unwrap_or(ScriptBuf::default());
         let sequence = params
             .sequence
             .unwrap_or_else(|| Sequence(rand::thread_rng().gen::<u32>()));
-        let witness = params.witness.unwrap_or_else(|| Witness::default());
+        let witness = params.witness.unwrap_or(Witness::default());
 
         return TxIn {
             previous_output: outpoint,
