@@ -31,7 +31,12 @@ impl Generator {
         let mut txid: Vec<String> = vec![];
 
         for _c in 0..count {
-            let tx = GenerateTx::random_tx(TxParams{ version: None, lock_time: None, input: None, output: None });
+            let tx = GenerateTx::random_tx(TxParams {
+                version: None,
+                lock_time: None,
+                input: None,
+                output: None,
+            });
             let raw_transaction = hex::encode(encode::serialize(&tx)).to_string();
             let tx_id = tx.compute_txid().to_string();
 

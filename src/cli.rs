@@ -46,7 +46,9 @@ pub fn handle() {
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Failed to read line");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
         let args: Vec<&str> = input.split_whitespace().collect();
 
         if args.is_empty() {
@@ -63,13 +65,15 @@ pub fn handle() {
 
         match cli.command {
             Commands::Help => help(),
-            Commands::Transaction { txscount, campuses } => transaction(txscount, campuses),
-            Commands::Tx { txscount, campuses } => transaction(txscount, campuses),
-            Commands::Block {txscount} => block(txscount),
+            Commands::Transaction { txscount, .. } => transaction(txscount), // TODO: Implement params into transaction generator
+            Commands::Tx { txscount, .. } => transaction(txscount), // TODO: Implement params into transaction generator
+            Commands::Block { txscount } => block(txscount),
             Commands::Clear => clear(),
             Commands::RegtestStart => handle_result(regtest_manager.start()),
             Commands::RegtestStop => handle_result(regtest_manager.stop()),
-            Commands::GetBlockbyHeight { height } => handle_result(regtest_manager.handle_getblockbyheight(height)),
+            Commands::GetBlockbyHeight { height } => {
+                handle_result(regtest_manager.handle_getblockbyheight(height))
+            }
             Commands::Finalize => break,
         }
     }
@@ -86,10 +90,14 @@ fn help() {
     println!("[Generate]");
     println!("transaction");
     println!("tx <txscount> [params...]             - Generate one or more transactions");
-    println!("block <txscount>                      - Generate new block with one or more transactions");
+    println!(
+        "block <txscount>                      - Generate new block with one or more transactions"
+    );
     println!("");
     println!("[Regtest]");
-    println!("get-blockby-height <height>           - Get a block at specific height in the regtest");
+    println!(
+        "get-blockby-height <height>           - Get a block at specific height in the regtest"
+    );
     println!("regtest-start                         - Start the regtest node");
     println!("regtest-stop                          - Stop the regtest node(please rember stop before close the program)");
 }
