@@ -17,6 +17,7 @@ pub enum Commands {
     Help,
     Clear,
     Finalize,
+    Exit,
     Transaction {
         #[arg(default_value_t = 1)]
         txscount: u32,
@@ -75,6 +76,7 @@ pub fn handle() {
                 handle_result(regtest_manager.handle_getblockbyheight(height))
             }
             Commands::Finalize => break,
+            Commands::Exit => break
         }
     }
     println!("Program finalized 👋");
@@ -85,6 +87,7 @@ fn help() {
     println!("[Utils]");
     println!("help                                  - Show help message");
     println!("clear                                 - Clear terminal screen");
+    println!("exit");
     println!("finalize                              - Exit the program");
     println!("");
     println!("[Generate]");
