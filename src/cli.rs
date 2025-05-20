@@ -22,6 +22,11 @@ pub enum Commands {
         txscount: u32,
         campuses: Vec<String>,
     },
+    Tx {
+        #[arg(default_value_t = 1)]
+        txscount: u32,
+        campuses: Vec<String>,
+    },
     Block {
         #[arg(default_value_t = 1)]
         txscount: u32,
@@ -59,6 +64,7 @@ pub fn handle() {
         match cli.command {
             Commands::Help => help(),
             Commands::Transaction { txscount, campuses } => transaction(txscount, campuses),
+            Commands::Tx { txscount, campuses } => transaction(txscount, campuses),
             Commands::Block {txscount} => block(txscount),
             Commands::Clear => clear(),
             Commands::RegtestStart => handle_result(regtest_manager.start()),
@@ -78,7 +84,8 @@ fn help() {
     println!("finalize                              - Exit the program");
     println!("");
     println!("[Generate]");
-    println!("transaction <txscount> [campuses...]  - Generate one or more transactions");
+    println!("transaction");
+    println!("tx <txscount> [params...]             - Generate one or more transactions");
     println!("block <txscount>                      - Generate new block with one or more transactions");
     println!("");
     println!("[Regtest]");
@@ -87,14 +94,9 @@ fn help() {
     println!("regtest-stop                          - Stop the regtest node(please rember stop before close the program)");
 }
 
-fn transaction(txscount: u32, campuses: Vec<String>) {
+// TODO: Implement params into transaction generator
+fn transaction(txscount: u32) {
     let transactions = Generator::transaction(txscount);
-                
-    if !campuses.is_empty() {
-        let processed_campuses = Generator::proces_flags_to_broke(campuses);
-        println!("Transactions: {}\nCampuses: {}", transactions, processed_campuses);
-        return;
-    }
 
     println!("Transactions: {}", transactions);
 }

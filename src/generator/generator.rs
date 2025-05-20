@@ -1,5 +1,7 @@
+use bitcoin::consensus::encode;
+
 use super::generate_blocks::GenerateBlock;
-use super::generate_tx::GenerateTx;
+use super::generate_tx::{GenerateTx, TxParams};
 pub struct Generator {}
 
 impl Generator {
@@ -23,14 +25,18 @@ impl Generator {
         .join("\n---\n")
     }
 
+    // TODO: Implement params into transaction generator
     pub fn transaction(count: u32) -> String {
         let mut raw_tx: Vec<String> = vec![];
         let mut txid: Vec<String> = vec![];
 
         for _c in 0..count {
-            let (new_raw_tx, new_txid) = GenerateTx::generate_simple_p2wpkh();
-            raw_tx.push(new_raw_tx);
-            txid.push(new_txid);
+            let tx = GenerateTx::random_tx(TxParams{ version: None, lock_time: None, input: None, output: None });
+            let raw_transaction = hex::encode(encode::serialize(&tx)).to_string();
+            let tx_id = tx.compute_txid().to_string();
+
+            raw_tx.push(raw_transaction);
+            txid.push(tx_id);
         }
 
         [
