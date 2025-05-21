@@ -18,9 +18,31 @@ pub struct InputParams {
     witness: Option<Witness>,
 }
 
+impl Default for InputParams {
+    fn default() -> Self {
+        InputParams {
+            outpoint: None,
+            script: None,
+            sequence: None,
+            witness: None,
+        }
+    }
+}
+
 pub struct OutputParams {
     value: Option<Amount>,
     script_pubkey: Option<ScriptBuf>,
+    script_params: Option<ScriptParams>,
+}
+
+impl Default for OutputParams {
+    fn default() -> Self {
+        OutputParams {
+            value: None,
+            script_pubkey: None,
+            script_params: None,
+        }
+    }
 }
 
 pub enum ScriptTypes {
@@ -36,6 +58,12 @@ pub struct ScriptParams {
     script_type: Option<ScriptTypes>,
 }
 
+impl Default for ScriptParams {
+    fn default() -> Self {
+        ScriptParams { script_type: None }
+    }
+}
+
 pub struct TxParams {
     pub(crate) version: Option<Version>,
     pub(crate) lock_time: Option<LockTime>,
@@ -43,6 +71,17 @@ pub struct TxParams {
     pub(crate) input: Option<InputParams>,
     // TODO: Output count
     pub(crate) output: Option<OutputParams>,
+}
+
+impl Default for TxParams {
+    fn default() -> Self {
+        TxParams {
+            version: None,
+            lock_time: None,
+            input: Some(InputParams::default()),
+            output: Some(OutputParams::default()),
+        }
+    }
 }
 
 impl GenerateTx {
@@ -95,10 +134,7 @@ impl GenerateTx {
                     sequence: None,
                     witness: None,
                 }),
-                output: Some(OutputParams {
-                    value: None,
-                    script_pubkey: Some(Self::random_script(ScriptParams { script_type: None })),
-                }),
+                output: Some(OutputParams::default()),
             })
             .compute_txid();
 
@@ -184,7 +220,7 @@ impl GenerateTx {
             .unwrap_or_else(|| Amount::from_sat(rand::thread_rng().gen::<u64>()));
         let script = params
             .script_pubkey
-            .unwrap_or_else(|| Self::random_script(ScriptParams { script_type: None })); // TODO: Add script params into output params
+            .unwrap_or_else(|| Self::random_script(params.script_params.unwrap_or_default()));
 
         TxOut {
             value: amount,
@@ -194,16 +230,8 @@ impl GenerateTx {
 
     // Return random valid transaction
     pub fn random_tx(params: TxParams) -> Transaction {
-        let input_params = params.input.unwrap_or(InputParams {
-            outpoint: None,
-            script: None,
-            sequence: None,
-            witness: None,
-        });
-        let output_params = params.output.unwrap_or(OutputParams {
-            value: None,
-            script_pubkey: None,
-        });
+        let input_params = params.input.unwrap_or_default();
+        let output_params = params.output.unwrap_or_default();
 
         Transaction {
             version: params.version.unwrap_or_else(|| Self::random_version()),
