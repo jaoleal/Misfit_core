@@ -51,7 +51,7 @@ impl Generator {
         .join("\n---\n")
     }
 
-    pub fn proces_flags_to_broke(flags: Vec<String>) -> String {
+    pub fn _proces_flags_to_broke(flags: Vec<String>) -> String {
         let mut flags_concateneted = "".to_string();
 
         for c in flags {

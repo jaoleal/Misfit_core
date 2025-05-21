@@ -231,8 +231,8 @@ impl GenerateTx {
         let sender_sk = SecretKey::new(&mut rand::thread_rng());
         let sender_pubkey = bitcoin::PublicKey::new(sender_sk.public_key(&secp));
         let sender_wpkh = sender_pubkey.wpubkey_hash().expect("Compressed key");
-        let sender_script = ScriptBuf::new_p2wpkh(&sender_wpkh);
-        let receiver_address = Address::p2pkh(sender_pubkey, Network::Bitcoin);
+        let _sender_script = ScriptBuf::new_p2wpkh(&sender_wpkh);
+        let _receiver_address = Address::p2pkh(sender_pubkey, Network::Bitcoin);
 
         // Generate sender keys and address
         let sender_sk = SecretKey::new(&mut rand::thread_rng());
