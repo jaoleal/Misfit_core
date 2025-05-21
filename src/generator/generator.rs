@@ -10,9 +10,17 @@ impl Generator {
         let mut txid: Vec<String> = vec![];
 
         for _c in 0..tx_count {
-            let (new_raw_tx, new_txid) = GenerateTx::generate_simple_p2wpkh();
-            raw_tx.push(new_raw_tx);
-            txid.push(new_txid);
+            let tx = GenerateTx::random_tx(TxParams {
+                version: None,
+                lock_time: None,
+                input: None,
+                output: None,
+            });
+            let raw_transaction = hex::encode(encode::serialize(&tx)).to_string();
+            let tx_id = tx.compute_txid().to_string();
+
+            raw_tx.push(raw_transaction);
+            txid.push(tx_id);
         }
 
         let block_header = GenerateBlock::new(txid.clone());
