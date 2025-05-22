@@ -1,7 +1,8 @@
 use bitcoin::consensus::encode;
+use misfit_core::transaction::random::transaction::TxParams;
+use misfit_core::transaction::generator::GenerateTx;
 
 use super::generate_blocks::GenerateBlock;
-use super::generate_tx::{GenerateTx, TxParams};
 pub struct Generator {}
 
 impl Generator {
@@ -10,12 +11,7 @@ impl Generator {
         let mut txid: Vec<String> = vec![];
 
         for _c in 0..tx_count {
-            let tx = GenerateTx::random_tx(TxParams {
-                version: None,
-                lock_time: None,
-                input: None,
-                output: None,
-            });
+            let tx = GenerateTx::valid_random(TxParams::default());
             let raw_transaction = hex::encode(encode::serialize(&tx)).to_string();
             let tx_id = tx.compute_txid().to_string();
 
@@ -39,12 +35,7 @@ impl Generator {
         let mut txid: Vec<String> = vec![];
 
         for _c in 0..count {
-            let tx = GenerateTx::random_tx(TxParams {
-                version: None,
-                lock_time: None,
-                input: None,
-                output: None,
-            });
+            let tx = GenerateTx::valid_random(TxParams::default());
             let raw_transaction = hex::encode(encode::serialize(&tx)).to_string();
             let tx_id = tx.compute_txid().to_string();
 
