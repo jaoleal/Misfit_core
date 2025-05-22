@@ -47,80 +47,116 @@ pub struct is_a_block {
 pub struct TransactionProcessor;
 
 impl TransactionProcessor {
-    pub fn process_version(_version: u32) {
-        //anything diferent of the version of that current type of tx, sooo maybe we can just add o remove one from this 
+    pub fn invalidate(tx: Transaction, flags: &HashSet<InvalidationFlag>) -> Transaction {
+        let should_invalidate_all = flags.contains(&InvalidationFlag::All);
+        
+        Transaction {
+            version: if should_invalidate_all || flags.contains(&InvalidationFlag::Version) {
+                Self::invalidate_version(tx.version)
+            } else {
+                tx.version
+            },
+            marker: if should_invalidate_all || flags.contains(&InvalidationFlag::Marker) {
+                Self::invalidate_marker(tx.marker)
+            } else {
+                tx.marker
+            },
+            flag: if should_invalidate_all || flags.contains(&InvalidationFlag::Flag) {
+                Self::invalidate_flag(tx.flag)
+            } else {
+                tx.flag
+            },
+            inputs: tx.inputs.into_iter()
+                .map(|input| Self::invalidate_input(input, flags, should_invalidate_all))
+                .collect(),
+            outputs: tx.outputs.into_iter()
+                .map(|output| Self::invalidate_output(output, flags, should_invalidate_all))
+                .collect(),
+            witness: tx.witness.map(|w| {
+                if should_invalidate_all || flags.contains(&InvalidationFlag::WitnessData) {
+                    Self::invalidate_witness(w)
+                } else {
+                    w
+                }
+            }),
+            locktime: if should_invalidate_all || flags.contains(&InvalidationFlag::Locktime) {
+                Self::invalidate_locktime(tx.locktime)
+            } else {
+                tx.locktime
+            },
+        }
     }
-    pub fn process_marker(_marker: u8) {
-        //Used to indicate a segwit transaction. Must be 00. sooo just diferent of 00? 
+
+    fn invalidate_version(v: u32) -> u32 { v + 1 }
+    fn invalidate_marker(_: u8) -> u8 { 0x11 }
+    fn invalidate_flag(_: u8) -> u8 { 0x00 }
+    fn invalidate_locktime(lt: u32) -> u32 { u32::MAX - lt }
+
+    fn invalidate_input(input: Input, flags: &HashSet<InvalidationFlag>, invalidate_all: bool) -> Input {
+        Input {
+            txid: if invalidate_all || flags.contains(&InvalidationFlag::InputTxid) {
+                Self::corrupt_hash(&input.txid)
+            } else {
+                input.txid
+            },
+            vout: if invalidate_all || flags.contains(&InvalidationFlag::InputVout) {
+                input.vout ^ 1  // Flip last bit
+            } else {
+                input.vout
+            },
+            script_sig: if invalidate_all || flags.contains(&InvalidationFlag::InputScriptSig) {
+                ScriptSig {
+                    size: input.script_sig.size + 10,
+                    data: Self::corrupt_hex(&input.script_sig.data),
+                }
+            } else {
+                input.script_sig
+            },
+            sequence: if invalidate_all || flags.contains(&InvalidationFlag::InputSequence) {
+                0xFFFFFFFF ^ input.sequence
+            } else {
+                input.sequence
+            },
+        }
     }
-    pub fn process_flag(_flag: u8) {
-        //Used to indicate a segwit transaction. Must be 01 or greater. 00?
+
+    fn invalidate_output(output: Output, flags: &HashSet<InvalidationFlag>, invalidate_all: bool) -> Output {
+        Output {
+            amount: if invalidate_all || flags.contains(&InvalidationFlag::OutputAmount) {
+                u64::MAX - output.amount
+            } else {
+                output.amount
+            },
+            script_pubkey: if invalidate_all || flags.contains(&InvalidationFlag::OutputScriptPubKey) {
+                ScriptPubKey {
+                    size: output.script_pubkey.size + 5,
+                    data: Self::corrupt_hex(&output.script_pubkey.data),
+                }
+            } else {
+                output.script_pubkey
+            },
+        }
     }
-    pub fn process_input_count(_input_count: u32) {
-        // i think here we can add or delete a unity here too.
+
+    fn invalidate_witness(witness: Witness) -> Witness {
+        Witness {
+            stack_items: witness.stack_items + 1,
+            size: witness.size + 8,
+            data: Self::corrupt_hex(&witness.data),
+        }
     }
-    
-    pub fn process_inputs(inputs: inputs) {
-        Self::process_txid(inputs._txid);
-        Self::process_vout(inputs._vout);
-        Self::process_scriptsig_size(inputs._scriptsig_size);
-        Self::process_scriptsig(inputs._scriptsig);
-        Self::process_sequence(inputs._sequence);
+
+    // Helper methods
+    fn corrupt_hash(hash: &str) -> String {
+        hex::encode(Sha256::digest(hash.as_bytes()))
     }
-    
-    pub fn process_txid(_txid: String) {
-        // a dont exist or malformed txid?
-    }
-    pub fn process_vout(_vout: u32) {
-        //The index number of the output you want to spend, just change it too
-    }
-    pub fn process_scriptsig_size(_size: u32) {
-        //incompatible for the next item too
-    }
-    pub fn process_scriptsig(_scriptsig: String) {
-        // maybe the same of scriptpubkey
-    }
-    pub fn process_sequence(_sequence: u32) {
-        //here i will probably need to use invalid in a syntax way...
-    }
-    
-    pub fn process_output_count(_output_count: u32) {
-        //same logic of process_input_count. 
-    }
-    
-    pub fn process_outputs(outputs: outputs) {
-        Self::process_amount(outputs._amount);
-        Self::process_scriptpubkeysize(outputs._scriptpubkeysize);
-        Self::process_scriptpubkey(outputs._scriptpubkey);
-    }
-    
-    pub fn process_amount(_amount: u32) {
-        //this will REALY BE hard but probably this and txid will need a real blockchain....
-    }
-    pub fn process_scriptpubkeysize(_size: u32) {
-        // here i think i can just put a incompatible with the next item...
-    }
-    pub fn process_scriptpubkey(_scriptpubkey: String) {
-       //maybe a malformed script or dont existed
-    }
-    
-    pub fn process_witness(witness: witness) {
-        Self::process_stack_items(witness.stack_items);
-        Self::process_witness_size(witness.size);
-        Self::process_witness_item(witness.item);
-    }
-    
-    pub fn process_stack_items(_items: u32) {
-        // The number of items to be pushed on to the stack as part of the unlocking code. maybe same of size...
-    }
-    pub fn process_witness_size(_size: u32) {
-        //same logic of all the size campus in general
-    }
-    pub fn process_witness_item(_item: String) {
-     //maybe just dont exist or malformed witness item
-    } 
-    pub fn process_locktime(_locktime: u32) {
-    // dont know how to do witout syntax error
+
+    fn corrupt_hex(data: &str) -> String {
+        let mut chars: Vec<char> = data.chars().collect();
+        if !chars.is_empty() {
+            chars[0] = if chars[0] == '0' { 'f' } else { '0' };
+        }
+        chars.into_iter().collect()
     }
 }
 
@@ -156,15 +192,16 @@ impl BlockProcessor {
 
 impl breaker_by_flags {
     pub fn is_a_transaction(campus: is_a_transaction) {
-        TransactionProcessor::process_version(campus._version);
-        TransactionProcessor::process_marker(campus._marker);
-        TransactionProcessor::process_flag(campus._flag);
-        TransactionProcessor::process_input_count(campus._input_count);
-        TransactionProcessor::process_inputs(campus._inputs);
-        TransactionProcessor::process_output_count(campus._output_count);
-        TransactionProcessor::process_outputs(campus._outputs);
-        TransactionProcessor::process_witness(campus.witness);
-        TransactionProcessor::process_locktime(campus._locktime);
+        TransactionProcessor::invalidate_all(campus);
+        TransactionProcessor::invalidate_version(campus._version);
+        TransactionProcessor::invalidate_marker(campus._marker);
+        TransactionProcessor::invalidate_flag(campus._flag);
+        TransactionProcessor::invalidate_input_count(campus._input_count);
+        TransactionProcessor::invalidate_inputs(campus._inputs);
+        TransactionProcessor::invalidate_output_count(campus._output_count);
+        TransactionProcessor::invalidate_outputs(campus._outputs);
+        TransactionProcessor::invalidate_witness(campus.witness);
+        TransactionProcessor::invalidate_locktime(campus._locktime);
     }
 
     pub fn is_a_block(campus: is_a_block) {
