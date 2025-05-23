@@ -200,6 +200,7 @@ impl TransactionInvalidator {
     }
 }
 
+
 // Improved display implementation with field highlighting
 impl std::fmt::Display for Transaction {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

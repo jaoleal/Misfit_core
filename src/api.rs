@@ -1,7 +1,11 @@
 use bitcoin::consensus::encode;
+use bitcoin::block::Header;
+use misfit_core::breakers::decoder_tools::{DecodedTransaction};
 use misfit_core::transaction::random::transaction::TxParams;
 use misfit_core::transaction::generator::GenerateTx;
 use misfit_core::block::generate_blocks::GenerateBlock;
+use misfit_core::breakers::{decoder_tools, };
+
 pub struct Generator {}
 
 impl Generator {
@@ -49,13 +53,21 @@ impl Generator {
         .join("\n---\n")
     }
 
-    pub fn _proces_flags_to_broke(flags: Vec<String>) -> String {
-        let mut flags_concateneted = "".to_string();
-
-        for c in flags {
-            flags_concateneted += &c;
-        }
-
-        format!("When cant process you flags for now {}", flags_concateneted).to_string()
+    pub fn decode_raw_transaction(raw_tx:String) -> Result<DecodedTransaction,Box<dyn std::error::Error>> {
+        let decoder = decoder_tools::BitcoinTransactionDecoder::new();
+        let decoded = decoder.decode_hex(&raw_tx);
+        decoded    
     }
+
+    pub fn decoder_block_header(block_header:String) -> Result<Header, Box<dyn std::error::Error>> {
+        decoder_tools::BlockUtils::decode_header_from_hex(&block_header)
+    }
+/* 
+    pub fn break_transaction(flags:Vec<String>)-> String{
+        
+    }
+    pub fn break_block(flags:Vec<String>)-> String{
+
+    }
+*/
 }

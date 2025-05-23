@@ -16,9 +16,6 @@ pub struct DecodedTransaction {
     pub lock_time: u32,
     pub inputs: Vec<DecodedInput>,
     pub outputs: Vec<DecodedOutput>,
-    pub weight: u64,
-    pub vsize: u64,
-    pub size: usize,
 }
 
 #[derive(Debug)]
@@ -42,7 +39,7 @@ impl BitcoinTransactionDecoder {
         Self
     }
 
-    pub fn decode_hex(&self, hex_string: &str) -> Result<DecodedTransaction, Box<dyn std::error::Error>> {
+    pub fn decode_hex(&self, hex_string: &str) -> Result<DecodedTransaction, Box<dyn std::error::Error>>{
         let clean_hex = hex_string.trim().replace(" ", "").to_lowercase();
         
         let bytes = hex::decode(&clean_hex)?;
@@ -53,14 +50,12 @@ impl BitcoinTransactionDecoder {
     pub fn decode_bytes(&self, bytes: &[u8]) -> Result<DecodedTransaction, Box<dyn std::error::Error>> {
         let tx: Transaction = deserialize(bytes)?;
         
-        self.decode_transaction(tx, bytes.len())
+        self.decode_transaction(tx)
     }
 
     /// Convert a Transaction struct to our decoded format
-    fn decode_transaction(&self, tx: Transaction, size: usize) -> Result<DecodedTransaction, Box<dyn std::error::Error>> {
+    pub fn decode_transaction(&self, tx: Transaction) -> Result<DecodedTransaction, Box<dyn std::error::Error>> {
         let txid = tx.compute_txid();
-        let weight = tx.weight().to_wu();
-        let vsize = tx.vsize() as u64;
 
         let inputs: Vec<DecodedInput> = tx.input.into_iter().map(|input| {
             DecodedInput {
@@ -84,9 +79,6 @@ impl BitcoinTransactionDecoder {
             lock_time: tx.lock_time.to_consensus_u32(),
             inputs,
             outputs,
-            weight,
-            vsize,
-            size,
         })
     }
 /* 
@@ -180,78 +172,5 @@ impl BlockUtils {
         hex::encode(bytes)
     }
 
-    // Compare two headers and show differences
-    pub fn compare_headers(original: &Header, modified: &Header) {
-        println!("\n=== HEADER COMPARISON ===");
-        
-        if original.version != modified.version {
-            println!("Version: {} → {}", 
-                original.version.to_consensus(), 
-                modified.version.to_consensus());
-        }
-        
-        if original.prev_blockhash != modified.prev_blockhash {
-            println!("Prev Block Hash: {} → {}", 
-                original.prev_blockhash, 
-                modified.prev_blockhash);
-        }
-        
-        if original.merkle_root != modified.merkle_root {
-            println!("Merkle Root: {} → {}", 
-                original.merkle_root, 
-                modified.merkle_root);
-        }
-        
-        if original.time != modified.time {
-            println!("Timestamp: {} → {}", 
-                original.time, 
-                modified.time);
-        }
-        
-        if original.bits != modified.bits {
-            println!("Bits: 0x{:08x} → 0x{:08x}", 
-                original.bits.to_consensus(),
-                modified.bits.to_consensus());
-        }
-        
-        if original.nonce != modified.nonce {
-            println!("Nonce: {} → {}", 
-                original.nonce, 
-                modified.nonce);
-        }
-        
-        println!("Block Hash: {} → {}", 
-            original.block_hash(), 
-            modified.block_hash());
-    }
 }
 
-// Simplified interface for common use cases
-
-
-//Todo implement the following for the cli 
-/* 
-// Example usage and tests
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let decoder = BitcoinTransactionDecoder::new();
-
-    // Example raw transaction (this is a mainnet transaction)
-    let raw_tx_hex = "01000000000101d7fc103aeb1e32e125959328597717f83c6de279da205de2cd52472f726171040100000000ffffffff02180114000000000017a914aeb0efc1da63629651dc3322c092c6607937c87c87e8af4d7a000000001600141ce75726e812b2fcaf36d6a178ccbfd58a5efcd602483045022100d91d64b5b0326b83d1cfca891a6df291ba975c43c51abfa0f021d9733fe69d6a02206061089696fb44643c4e6e4311304d6d4c41309c10eba835c2835ced06537e960121021b7f2cb05643404c57d0587b48c8d882a454f1040c47cbd31c73d29b599d040100000000";
-
-    println!("Decoding raw transaction...\n");
-    
-    match decoder.decode_hex(raw_tx_hex) {
-        Ok(decoded) => {
-            decoder.print_transaction(&decoded);
-        }
-        Err(e) => {
-            eprintln!("Error decoding transaction: {}", e);
-        }
-    }
-
-
-
-    Ok(())
-}
-
-*/

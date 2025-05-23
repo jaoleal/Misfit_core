@@ -18,6 +18,12 @@ pub enum Commands {
     Help,
     Clear,
     Exit,
+    decode_transaction{
+        raw_transaction: String
+    },
+    decode_block{
+        block_header: String
+    },
     Tx {
         #[arg(default_value_t = 1)]
         txscount: u32,
@@ -61,6 +67,8 @@ pub fn handle() {
 
         match cli.command {
             Commands::Help => help(),
+            Commands::decode_transaction {raw_transaction} => transaction_splitter(raw_transaction),
+            Commands::decode_block { block_header } => block_splitter(block_header),
             Commands::Tx { txscount, .. } => transaction(txscount), // TODO: Implement params into transaction generator
             Commands::Block { txscount } => block(txscount),
             Commands::Clear => clear(),
@@ -82,6 +90,10 @@ fn help() {
     println!("clear                                 - Clear terminal screen");
     println!("exit");
     println!("");
+    println!("[Decode]");
+    println!("decode-transaction                    - decode a raw transaction");
+    println!("decode-block                          - decode a block header");
+    println!("");
     println!("[Generate]");
     println!("tx <txscount> [params...]             - Generate one or more transactions");
     println!(
@@ -96,7 +108,41 @@ fn help() {
     println!("regtest-stop                          - Stop the regtest node(please rember stop before close the program)");
 }
 
-// TODO: Implement params into transaction generator
+fn transaction_splitter(raw_transaction:String) {
+    let decoded = Generator::decode_raw_transaction(raw_transaction).unwrap(); 
+    println!("TXID: {}", decoded.txid);
+    println!("Version: {}", decoded.version);
+    println!("Lock Time: {}", decoded.lock_time);
+    println!();
+
+    println!("INPUTS ({}):", decoded.inputs.len());
+    for (i, input) in decoded.inputs.iter().enumerate() {
+        println!("  Input {}:", i);
+        println!("    Previous Output: {}:{}", input.previous_output.txid, input.previous_output.vout);
+        println!("    Script Sig: {}", input.script_sig);
+        println!("    Sequence: 0x{:08x}", input.sequence);
+        
+        if !input.witness.is_empty() {
+            println!("    Witness ({} items):", input.witness.len());
+            for (j, witness_item) in input.witness.iter().enumerate() {
+                println!("      {}: {}", j, hex::encode(witness_item));
+            }
+        }
+        println!();
+}
+
+}
+fn block_splitter(block_header:String){
+    let header = Generator::decoder_block_header(block_header).unwrap();
+    println!("Version: {}", header.version.to_consensus());
+    println!("Previous Block: {}", header.prev_blockhash);
+    println!("Merkle Root: {}", header.merkle_root);
+    println!("Timestamp: {}", header.time);
+    println!("Bits: 0x{:08x}", header.bits.to_consensus());
+    println!("Nonce: {}", header.nonce);
+    println!("Block Hash: {}", header.block_hash());
+}
+
 fn transaction(txscount: u32) {
     let transactions = Generator::transaction(txscount);
 
