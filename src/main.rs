@@ -1,5 +1,5 @@
 mod cli;
-mod generator;
+mod api;
 
 fn main() {
     cli::handle();

@@ -3,7 +3,8 @@ use std::io::Write;
 
 use clap::{Parser, Subcommand};
 
-use crate::generator::{generator::Generator, regtest::RegtestManager};
+use misfit_core::regtest_pack::regtest::RegtestManager;
+use crate::api::Generator;
 
 #[derive(Parser)]
 #[command(version, about, disable_help_subcommand = true)]
@@ -17,11 +18,6 @@ pub enum Commands {
     Help,
     Clear,
     Exit,
-    Transaction {
-        #[arg(default_value_t = 1)]
-        txscount: u32,
-        campuses: Vec<String>,
-    },
     Tx {
         #[arg(default_value_t = 1)]
         txscount: u32,
@@ -65,7 +61,6 @@ pub fn handle() {
 
         match cli.command {
             Commands::Help => help(),
-            Commands::Transaction { txscount, .. } => transaction(txscount), // TODO: Implement params into transaction generator
             Commands::Tx { txscount, .. } => transaction(txscount), // TODO: Implement params into transaction generator
             Commands::Block { txscount } => block(txscount),
             Commands::Clear => clear(),
@@ -88,7 +83,6 @@ fn help() {
     println!("exit");
     println!("");
     println!("[Generate]");
-    println!("transaction");
     println!("tx <txscount> [params...]             - Generate one or more transactions");
     println!(
         "block <txscount>                      - Generate new block with one or more transactions"

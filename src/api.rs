@@ -1,8 +1,7 @@
 use bitcoin::consensus::encode;
 use misfit_core::transaction::random::transaction::TxParams;
 use misfit_core::transaction::generator::GenerateTx;
-
-use super::generate_blocks::GenerateBlock;
+use misfit_core::block::generate_blocks::GenerateBlock;
 pub struct Generator {}
 
 impl Generator {
