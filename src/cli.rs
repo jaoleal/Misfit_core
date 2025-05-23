@@ -110,26 +110,12 @@ fn help() {
 
 fn transaction_splitter(raw_transaction:String) {
     let decoded = Generator::decode_raw_transaction(raw_transaction).unwrap(); 
-    println!("TXID: {}", decoded.txid);
+    
+    // Access transaction data directly:
     println!("Version: {}", decoded.version);
-    println!("Lock Time: {}", decoded.lock_time);
-    println!();
-
-    println!("INPUTS ({}):", decoded.inputs.len());
-    for (i, input) in decoded.inputs.iter().enumerate() {
-        println!("  Input {}:", i);
-        println!("    Previous Output: {}:{}", input.previous_output.txid, input.previous_output.vout);
-        println!("    Script Sig: {}", input.script_sig);
-        println!("    Sequence: 0x{:08x}", input.sequence);
-        
-        if !input.witness.is_empty() {
-            println!("    Witness ({} items):", input.witness.len());
-            for (j, witness_item) in input.witness.iter().enumerate() {
-                println!("      {}: {}", j, hex::encode(witness_item));
-            }
-        }
-        println!();
-}
+    println!("Locktime: {}", decoded.lock_time);
+    println!("Input count: {:#?}", decoded.input);
+    println!("Output count: {:#?}", decoded.output);
 
 }
 fn block_splitter(block_header:String){

@@ -1,36 +1,9 @@
 use bitcoin::{
-    consensus::{deserialize},
-    Transaction, OutPoint, 
-    Txid, ScriptBuf,
-};
-use bitcoin::{
-    blockdata::{
-        block::{Block, Header},
-    },
+    consensus::deserialize,
+    Transaction,
+    blockdata::block::{Block, Header},
 };
 use bitcoin::consensus::Decodable;
-#[derive(Debug)]
-pub struct DecodedTransaction {
-    pub txid: Txid,
-    pub version: i32,
-    pub lock_time: u32,
-    pub inputs: Vec<DecodedInput>,
-    pub outputs: Vec<DecodedOutput>,
-}
-
-#[derive(Debug)]
-pub struct DecodedInput {
-    pub previous_output: OutPoint,
-    pub script_sig: ScriptBuf,
-    pub sequence: u32,
-    pub witness: Vec<Vec<u8>>,
-}
-
-#[derive(Debug)]
-pub struct DecodedOutput {
-    pub value: u64,
-    pub script_pubkey: ScriptBuf,
-}
 
 pub struct BitcoinTransactionDecoder;
 
@@ -39,48 +12,40 @@ impl BitcoinTransactionDecoder {
         Self
     }
 
-    pub fn decode_hex(&self, hex_string: &str) -> Result<DecodedTransaction, Box<dyn std::error::Error>>{
+    /// Decode a hex string directly to bitcoin::Transaction
+    pub fn decode_hex(&self, hex_string: &str) -> Result<Transaction, Box<dyn std::error::Error>> {
         let clean_hex = hex_string.trim().replace(" ", "").to_lowercase();
-        
         let bytes = hex::decode(&clean_hex)?;
-        
         self.decode_bytes(&bytes)
     }
 
-    pub fn decode_bytes(&self, bytes: &[u8]) -> Result<DecodedTransaction, Box<dyn std::error::Error>> {
+    /// Decode bytes directly to bitcoin::Transaction
+    pub fn decode_bytes(&self, bytes: &[u8]) -> Result<Transaction, Box<dyn std::error::Error>> {
         let tx: Transaction = deserialize(bytes)?;
-        
-        self.decode_transaction(tx)
+        Ok(tx)
     }
 
-    /// Convert a Transaction struct to our decoded format
-    pub fn decode_transaction(&self, tx: Transaction) -> Result<DecodedTransaction, Box<dyn std::error::Error>> {
-        let txid = tx.compute_txid();
-
-        let inputs: Vec<DecodedInput> = tx.input.into_iter().map(|input| {
-            DecodedInput {
-                previous_output: input.previous_output,
-                script_sig: input.script_sig,
-                sequence: input.sequence.0,
-                witness: input.witness.to_vec(),
-            }
-        }).collect();
-
-        let outputs: Vec<DecodedOutput> = tx.output.into_iter().map(|output| {
-            DecodedOutput {
-                value: output.value.to_sat(),
-                script_pubkey: output.script_pubkey,
-            }
-        }).collect();
-
-        Ok(DecodedTransaction {
-            txid,
-            version: tx.version.0,
-            lock_time: tx.lock_time.to_consensus_u32(),
-            inputs,
-            outputs,
-        })
+    /// Helper method to check if transaction has witness data
+    pub fn has_witness_data(&self, tx: &Transaction) -> bool {
+        tx.input.iter().any(|input| !input.witness.is_empty())
     }
+
+    /// Helper method to get SegWit marker and flag
+    pub fn get_segwit_flags(&self, tx: &Transaction) -> (u8, u8) {
+        if self.has_witness_data(tx) {
+            (0x00, 0x01) // SegWit marker and flag
+        } else {
+            (0x00, 0x00) // No SegWit
+        }
+    }
+}
+
+impl Default for BitcoinTransactionDecoder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /* 
     /// Pretty print a decoded transaction
     pub fn print_transaction(&self, decoded: &DecodedTransaction) {
@@ -119,7 +84,6 @@ impl BitcoinTransactionDecoder {
     }
 */
 
-}
 
 
 
@@ -171,6 +135,7 @@ impl BlockUtils {
         header.consensus_encode(&mut bytes).expect("Failed to encode header");
         hex::encode(bytes)
     }
+
 
 }
 

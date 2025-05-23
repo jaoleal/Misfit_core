@@ -1,57 +1,12 @@
 use sha2::{Sha256, Digest};
 use std::collections::HashSet;
-
-// Simplified data structures with more idiomatic naming
-#[derive(Debug, Clone)]
-pub struct Transaction {
-    pub version: u32,
-    pub marker: u8,
-    pub flag: u8,
-    pub inputs: Vec<Input>,
-    pub outputs: Vec<Output>,
-    pub witness: Option<Witness>,
-    pub locktime: u32,
-}
-
-#[derive(Debug, Clone)]
-pub struct Input {
-    pub txid: String,
-    pub vout: u32,
-    pub script_sig: ScriptSig,
-    pub sequence: u32,
-}
-
-#[derive(Debug, Clone)]
-pub struct Output {
-    pub amount: u64,  // Satoshis
-    pub script_pubkey: ScriptPubKey,
-}
-
-#[derive(Debug, Clone)]
-pub struct ScriptSig {
-    pub size: u32,
-    pub data: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct ScriptPubKey {
-    pub size: u32,
-    pub data: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct Witness {
-    pub stack_items: u32,
-    pub size: u32,
-    pub data: String,
-}
+use bitcoin::{Transaction, TxIn, TxOut, Witness, OutPoint, ScriptBuf, Amount};
+use bitcoin::blockdata::script::Script;
 
 // Define available invalidation flags
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum InvalidationFlag {
     Version,
-    Marker,
-    Flag,
     InputTxid,
     InputVout,
     InputScriptSig,
@@ -67,8 +22,6 @@ impl InvalidationFlag {
     fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "version" => Some(Self::Version),
-            "marker" => Some(Self::Marker),
-            "flag" => Some(Self::Flag),
             "input-txid" | "txid" => Some(Self::InputTxid),
             "input-vout" | "vout" => Some(Self::InputVout),
             "input-script" | "script-sig" => Some(Self::InputScriptSig),
@@ -83,163 +36,164 @@ impl InvalidationFlag {
     }
 }
 
-// Transaction processor with more focused methods and flag support
+// Transaction processor with Bitcoin Core Transaction struct
 pub struct TransactionInvalidator;
 
 impl TransactionInvalidator {
-    pub fn invalidate(tx: Transaction, flags: &HashSet<InvalidationFlag>) -> Transaction {
+    pub fn invalidate(mut tx: Transaction, flags: &HashSet<InvalidationFlag>) -> Transaction {
         let should_invalidate_all = flags.contains(&InvalidationFlag::All);
         
-        Transaction {
-            version: if should_invalidate_all || flags.contains(&InvalidationFlag::Version) {
-                Self::invalidate_version(tx.version)
-            } else {
-                tx.version
+        // Invalidate transaction structure (affects txid) - do this first
+        if should_invalidate_all || flags.contains(&InvalidationFlag::InputTxid) {
+            Self::corrupt_txid(&mut tx);
+        }
+        
+        // Invalidate version
+        if should_invalidate_all || flags.contains(&InvalidationFlag::Version) {
+            tx.version = Self::invalidate_version(tx.version);
+        }
+        
+        // Invalidate locktime
+        if should_invalidate_all || flags.contains(&InvalidationFlag::Locktime) {
+            tx.lock_time = Self::invalidate_locktime(tx.lock_time);
+        }
+        
+        // Invalidate inputs
+        for input in tx.input.iter_mut() {
+            Self::invalidate_input_in_place(input, flags, should_invalidate_all);
+        }
+        
+        // Invalidate outputs
+        for output in tx.output.iter_mut() {
+            Self::invalidate_output_in_place(output, flags, should_invalidate_all);
+        }
+        
+        tx
+    }
+
+    fn invalidate_version(v: bitcoin::blockdata::transaction::Version) -> bitcoin::blockdata::transaction::Version {
+        bitcoin::blockdata::transaction::Version(v.0 + 1)
+    }
+    
+    fn invalidate_locktime(lt: bitcoin::absolute::LockTime) -> bitcoin::absolute::LockTime {
+        match lt {
+            bitcoin::absolute::LockTime::Blocks(height) => {
+                bitcoin::absolute::LockTime::Blocks(
+                    bitcoin::absolute::Height::from_consensus(
+                        u32::MAX - height.to_consensus_u32()
+                    ).unwrap_or(height)
+                )
             },
-            marker: if should_invalidate_all || flags.contains(&InvalidationFlag::Marker) {
-                Self::invalidate_marker(tx.marker)
-            } else {
-                tx.marker
-            },
-            flag: if should_invalidate_all || flags.contains(&InvalidationFlag::Flag) {
-                Self::invalidate_flag(tx.flag)
-            } else {
-                tx.flag
-            },
-            inputs: tx.inputs.into_iter()
-                .map(|input| Self::invalidate_input(input, flags, should_invalidate_all))
-                .collect(),
-            outputs: tx.outputs.into_iter()
-                .map(|output| Self::invalidate_output(output, flags, should_invalidate_all))
-                .collect(),
-            witness: tx.witness.map(|w| {
-                if should_invalidate_all || flags.contains(&InvalidationFlag::WitnessData) {
-                    Self::invalidate_witness(w)
-                } else {
-                    w
-                }
-            }),
-            locktime: if should_invalidate_all || flags.contains(&InvalidationFlag::Locktime) {
-                Self::invalidate_locktime(tx.locktime)
-            } else {
-                tx.locktime
+            bitcoin::absolute::LockTime::Seconds(time) => {
+                bitcoin::absolute::LockTime::Seconds(
+                    bitcoin::absolute::Time::from_consensus(
+                        u32::MAX - time.to_consensus_u32()
+                    ).unwrap_or(time)
+                )
             },
         }
     }
 
-    fn invalidate_version(v: u32) -> u32 { v + 1 }
-    fn invalidate_marker(_: u8) -> u8 { 0x11 }
-    fn invalidate_flag(_: u8) -> u8 { 0x00 }
-    fn invalidate_locktime(lt: u32) -> u32 { u32::MAX - lt }
-
-    fn invalidate_input(input: Input, flags: &HashSet<InvalidationFlag>, invalidate_all: bool) -> Input {
-        Input {
-            txid: if invalidate_all || flags.contains(&InvalidationFlag::InputTxid) {
-                Self::corrupt_hash(&input.txid)
-            } else {
-                input.txid
-            },
-            vout: if invalidate_all || flags.contains(&InvalidationFlag::InputVout) {
-                input.vout ^ 1  // Flip last bit
-            } else {
-                input.vout
-            },
-            script_sig: if invalidate_all || flags.contains(&InvalidationFlag::InputScriptSig) {
-                ScriptSig {
-                    size: input.script_sig.size + 10,
-                    data: Self::corrupt_hex(&input.script_sig.data),
-                }
-            } else {
-                input.script_sig
-            },
-            sequence: if invalidate_all || flags.contains(&InvalidationFlag::InputSequence) {
-                0xFFFFFFFF ^ input.sequence
-            } else {
-                input.sequence
-            },
+    fn invalidate_input_in_place(
+        input: &mut TxIn, 
+        flags: &HashSet<InvalidationFlag>, 
+        invalidate_all: bool
+    ) {
+        // Note: InputTxid invalidation is now handled at transaction level
+        
+        if invalidate_all || flags.contains(&InvalidationFlag::InputVout) {
+            input.previous_output.vout ^= 1; // Flip last bit
+        }
+        
+        // Invalidate script_sig
+        if invalidate_all || flags.contains(&InvalidationFlag::InputScriptSig) {
+            input.script_sig = Self::corrupt_script(&input.script_sig);
+        }
+        
+        // Invalidate sequence
+        if invalidate_all || flags.contains(&InvalidationFlag::InputSequence) {
+            input.sequence = bitcoin::Sequence(0xFFFFFFFF ^ input.sequence.0);
+        }
+        
+        // Invalidate witness data
+        if invalidate_all || flags.contains(&InvalidationFlag::WitnessData) {
+            input.witness = Self::corrupt_witness(&input.witness);
         }
     }
 
-    fn invalidate_output(output: Output, flags: &HashSet<InvalidationFlag>, invalidate_all: bool) -> Output {
-        Output {
-            amount: if invalidate_all || flags.contains(&InvalidationFlag::OutputAmount) {
-                u64::MAX - output.amount
-            } else {
-                output.amount
-            },
-            script_pubkey: if invalidate_all || flags.contains(&InvalidationFlag::OutputScriptPubKey) {
-                ScriptPubKey {
-                    size: output.script_pubkey.size + 5,
-                    data: Self::corrupt_hex(&output.script_pubkey.data),
-                }
-            } else {
-                output.script_pubkey
-            },
+    fn invalidate_output_in_place(
+        output: &mut TxOut, 
+        flags: &HashSet<InvalidationFlag>, 
+        invalidate_all: bool
+    ) {
+        // Invalidate amount
+        if invalidate_all || flags.contains(&InvalidationFlag::OutputAmount) {
+            let current_sats = output.value.to_sat();
+            output.value = Amount::from_sat(u64::MAX - current_sats);
         }
-    }
-
-    fn invalidate_witness(witness: Witness) -> Witness {
-        Witness {
-            stack_items: witness.stack_items + 1,
-            size: witness.size + 8,
-            data: Self::corrupt_hex(&witness.data),
+        
+        // Invalidate script_pubkey
+        if invalidate_all || flags.contains(&InvalidationFlag::OutputScriptPubKey) {
+            output.script_pubkey = Self::corrupt_script(&output.script_pubkey);
         }
     }
 
     // Helper methods
-    fn corrupt_hash(hash: &str) -> String {
-        hex::encode(Sha256::digest(hash.as_bytes()))
-    }
-
-    fn corrupt_hex(data: &str) -> String {
-        let mut chars: Vec<char> = data.chars().collect();
-        if !chars.is_empty() {
-            chars[0] = if chars[0] == '0' { 'f' } else { '0' };
+    fn corrupt_txid(tx: &mut Transaction) -> bitcoin::Txid {
+        // Remove the last input if there are multiple inputs
+        if tx.input.len() > 1 {
+            tx.input.pop();
+        } else if !tx.input.is_empty() {
+            // If only one input, corrupt its previous output
+            tx.input[0].previous_output.vout = tx.input[0].previous_output.vout.wrapping_add(1);
         }
-        chars.into_iter().collect()
-    }
-}
-
-
-// Improved display implementation with field highlighting
-impl std::fmt::Display for Transaction {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        writeln!(f, "Transaction (Version: {})", self.version)?;
-        writeln!(f, "SegWit Marker: {:02x}, Flag: {:02x}", self.marker, self.flag)?;
         
-        writeln!(f, "\nInputs ({}):", self.inputs.len())?;
-        for (i, input) in self.inputs.iter().enumerate() {
-            writeln!(f, "  #{:02}: TXID: {}, VOUT: {}", i+1, input.txid, input.vout)?;
-            writeln!(f, "      ScriptSig: {} ({} bytes)", input.script_sig.data, input.script_sig.size)?;
-            writeln!(f, "      Sequence: {:08x}", input.sequence)?;
-        }
+        // Compute and return the new transaction ID
+        tx.compute_txid()
+    }
 
-        writeln!(f, "\nOutputs ({}):", self.outputs.len())?;
-        for (i, output) in self.outputs.iter().enumerate() {
-            let btc = output.amount as f64 / 100_000_000.0;
-            writeln!(f, "  #{:02}: {:.8} BTC", i+1, btc)?;
-            writeln!(f, "      ScriptPubKey: {} ({} bytes)", output.script_pubkey.data, output.script_pubkey.size)?;
+    fn corrupt_script(script: &ScriptBuf) -> ScriptBuf {
+        let mut bytes = script.as_bytes().to_vec();
+        if !bytes.is_empty() {
+            bytes[0] = bytes[0].wrapping_add(1);
+        } else {
+            bytes.push(0x51); // Add OP_1 to empty script
         }
-
-        if let Some(w) = &self.witness {
-            writeln!(f, "\nWitness: {} items ({} bytes)", w.stack_items, w.size)?;
-            writeln!(f, "     Data: {}...", if w.data.len() > 16 { &w.data[..16] } else { &w.data })?;
+        ScriptBuf::from_bytes(bytes)
+    }
+    
+    fn corrupt_witness(witness: &Witness) -> Witness {
+        let mut new_witness = witness.clone();
+        if let Some(first_item) = new_witness.iter().next() {
+            let mut corrupted = first_item.to_vec();
+            if !corrupted.is_empty() {
+                corrupted[0] = corrupted[0].wrapping_add(1);
+            } else {
+                corrupted.push(0x01);
+            }
+            let mut witness_stack = Vec::new();
+            witness_stack.push(corrupted);
+            // Add remaining items
+            for item in witness.iter().skip(1) {
+                witness_stack.push(item.to_vec());
+            }
+            new_witness = Witness::from_slice(&witness_stack);
+        } else {
+            // Empty witness, add a dummy item
+            new_witness = Witness::from_slice(&[vec![0x01]]);
         }
-
-        write!(f, "\nLocktime: {}", self.locktime)
+        new_witness
     }
 }
 
 
-/* 
+
 fn print_usage() {
     println!("Bitcoin Transaction Invalidator");
     println!("Usage: btc-invalidator [FLAGS]");
     println!("\nAvailable flags:");
     println!("  --all           Invalidate all transaction fields");
     println!("  --version       Invalidate transaction version");
-    println!("  --marker        Invalidate SegWit marker");
-    println!("  --flag          Invalidate SegWit flag");
     println!("  --txid          Invalidate input transaction ID");
     println!("  --vout          Invalidate input vout");
     println!("  --script-sig    Invalidate input script signature");
@@ -252,8 +206,7 @@ fn print_usage() {
     println!("\nExample: btc-invalidator --txid --amount --locktime");
 }
 
-fn parse_flags() -> HashSet<InvalidationFlag> {
-    let args: Vec<String> = env::args().collect();
+pub fn parse_flags(args: Vec<String>) -> HashSet<InvalidationFlag> {
     let mut flags = HashSet::new();
 
     // Display help and exit if requested
@@ -284,86 +237,3 @@ fn parse_flags() -> HashSet<InvalidationFlag> {
 
     flags
 }
-
-fn create_sample_transaction() -> Transaction {
-    Transaction {
-        version: 2,
-        marker: 0,
-        flag: 1,
-        inputs: vec![Input {
-            txid: "a1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d".into(),
-            vout: 0,
-            script_sig: ScriptSig {
-                size: 22,
-                data: "0014123f6562cc08a7991a8e2bfa2d256a05f5032f87".into(),
-            },
-            sequence: 0xFFFFFFFF,
-        }],
-        outputs: vec![
-            Output {
-                amount: 5_000_000_000,  // 50 BTC
-                script_pubkey: ScriptPubKey {
-                    size: 22,
-                    data: "0014c5dae84e4fc7e812f67c72a1109e317bb3a6e7f7".into(),
-                },
-            },
-            Output {
-                amount: 2_500_000_000,  // 25 BTC
-                script_pubkey: ScriptPubKey {
-                    size: 22,
-                    data: "0014a316b8c41c3d6a0d2e59e5783eef558f9c7d3a6c".into(),
-                },
-            },
-        ],
-        witness: Some(Witness {
-            stack_items: 2,
-            size: 72,
-            data: "304402207515cf1a...".into(),
-        }),
-        locktime: 0,
-    }
-}
-
-fn main() {
-    // Parse command line flags
-    let flags = parse_flags();
-    
-    if flags.is_empty() {
-        println!("No invalidation flags specified. Use --help for usage information.");
-        return;
-    }
-
-    // Create valid transaction
-    let valid_tx = create_sample_transaction();
-
-    // Create invalid version based on specified flags
-    let invalid_tx = TransactionInvalidator::invalidate(valid_tx.clone(), &flags);
-
-    // List which fields are being invalidated
-    println!("Invalidating the following fields:");
-    for flag in &flags {
-        if *flag == InvalidationFlag::All {
-            println!("  - ALL FIELDS");
-            break;
-        }
-        match flag {
-            InvalidationFlag::Version => println!("  - Transaction Version"),
-            InvalidationFlag::Marker => println!("  - SegWit Marker"),
-            InvalidationFlag::Flag => println!("  - SegWit Flag"),
-            InvalidationFlag::InputTxid => println!("  - Input TXIDs"),
-            InvalidationFlag::InputVout => println!("  - Input Vouts"),
-            InvalidationFlag::InputScriptSig => println!("  - Input Script Signatures"),
-            InvalidationFlag::InputSequence => println!("  - Input Sequences"),
-            InvalidationFlag::OutputAmount => println!("  - Output Amounts"),
-            InvalidationFlag::OutputScriptPubKey => println!("  - Output Script PubKeys"),
-            InvalidationFlag::WitnessData => println!("  - Witness Data"),
-            InvalidationFlag::Locktime => println!("  - Locktime"),
-            _ => {}
-        }
-    }
-
-    // Display results
-    println!("\nValid Transaction:\n{}\n", valid_tx);
-    println!("Invalid Transaction:\n{}", invalid_tx);
-}
-*/

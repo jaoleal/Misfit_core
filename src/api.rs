@@ -1,10 +1,11 @@
 use bitcoin::consensus::encode;
 use bitcoin::block::Header;
-use misfit_core::breakers::decoder_tools::{DecodedTransaction};
+use bitcoin::Transaction;
+use misfit_core::breakers::decoder_tools::{BitcoinTransactionDecoder};
 use misfit_core::transaction::random::transaction::TxParams;
 use misfit_core::transaction::generator::GenerateTx;
 use misfit_core::block::generate_blocks::GenerateBlock;
-use misfit_core::breakers::{decoder_tools, };
+use misfit_core::breakers::{decoder_tools,block_breaker, transaction_breaker};
 
 pub struct Generator {}
 
@@ -53,7 +54,7 @@ impl Generator {
         .join("\n---\n")
     }
 
-    pub fn decode_raw_transaction(raw_tx:String) -> Result<DecodedTransaction,Box<dyn std::error::Error>> {
+    pub fn decode_raw_transaction(raw_tx:String) -> Result<Transaction,Box<dyn std::error::Error>> {
         let decoder = decoder_tools::BitcoinTransactionDecoder::new();
         let decoded = decoder.decode_hex(&raw_tx);
         decoded    
@@ -62,10 +63,44 @@ impl Generator {
     pub fn decoder_block_header(block_header:String) -> Result<Header, Box<dyn std::error::Error>> {
         decoder_tools::BlockUtils::decode_header_from_hex(&block_header)
     }
-/* 
-    pub fn break_transaction(flags:Vec<String>)-> String{
-        
+
+    pub fn break_transaction(transaction:String, flags:Vec<String>)-> String{
+            // Parse command line flags
+    let flags = transaction_breaker::parse_flags(flags);
+    
+    if flags.is_empty() {
+        println!("No invalidation flags specified. Use --help for usage information.");
     }
+    let decoded_tx = Generator::decode_raw_transaction(transaction.clone());
+    // Create invalid version based on specified flags
+    let invalid_tx = transaction_breaker::TransactionInvalidator::invalidate(decoded_tx.unwrap(), &flags);
+
+    // List which fields are being invalidated
+    println!("Invalidating the following fields:");
+    for flag in &flags {
+        if *flag == transaction_breaker::InvalidationFlag::All {
+            println!("  - ALL FIELDS");
+            break;
+        }
+        match flag {
+            transaction_breaker::InvalidationFlag::Version => println!("  - Transaction Version"),
+            transaction_breaker::InvalidationFlag::InputTxid => println!("  - Input TXIDs"),
+            transaction_breaker::InvalidationFlag::InputVout => println!("  - Input Vouts"),
+            transaction_breaker::InvalidationFlag::InputScriptSig => println!("  - Input Script Signatures"),
+            transaction_breaker::InvalidationFlag::InputSequence => println!("  - Input Sequences"),
+            transaction_breaker::InvalidationFlag::OutputAmount => println!("  - Output Amounts"),
+            transaction_breaker::InvalidationFlag::OutputScriptPubKey => println!("  - Output Script PubKeys"),
+            transaction_breaker::InvalidationFlag::WitnessData => println!("  - Witness Data"),
+            transaction_breaker::InvalidationFlag::Locktime => println!("  - Locktime"),
+            _ => {}
+        }
+    }
+
+    // Display results
+    println!("\n Inputed Transaction:\n{}\n", transaction);
+    format!("{:#?}",invalid_tx)
+    }
+/* 
     pub fn break_block(flags:Vec<String>)-> String{
 
     }
