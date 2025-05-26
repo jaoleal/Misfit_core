@@ -50,6 +50,30 @@ pub enum Commands {
         #[arg(long, help = "Invalidate all transaction fields")]
         all: bool,
     },
+    #[command(name = "break-block")]
+    BreakBlock {
+        block_header: String,
+        #[arg(long, help = "Invalidate block version")]
+        version: bool,
+        #[arg(long = "prev-hash", help = "Invalidate previous block hash")]
+        prev_hash: bool,
+        #[arg(long = "merkle-root", help = "Invalidate merkle root")]
+        merkle_root: bool,
+        #[arg(long, help = "Invalidate timestamp")]
+        timestamp: bool,
+        #[arg(long, help = "Invalidate difficulty bits")]
+        bits: bool,
+        #[arg(long, help = "Invalidate nonce")]
+        nonce: bool,
+        #[arg(long, help = "Invalidate all block fields")]
+        all: bool,
+        #[arg(long, help = "Override version with specific value")]
+        version_override: Option<i32>,
+        #[arg(long, help = "Add/subtract seconds to timestamp")]
+        timestamp_offset: Option<i64>,
+        #[arg(long, help = "Use zero hashes instead of random")]
+        zero_hashes: bool,
+    },
     Tx {
         #[arg(default_value_t = 1)]
         txscount: u32,
@@ -111,11 +135,30 @@ pub fn handle() {
                 locktime, 
                 all 
             } => {
-                let flags = build_flags_vector(
+                let flags = build_transaction_flags_vector(
                     version, txid, vout, script_sig, sequence, 
                     amount, script_pubkey, witness, locktime, all
                 );
                 break_transaction(raw_transaction, flags);
+            },
+            Commands::BreakBlock {
+                block_header,
+                version,
+                prev_hash,
+                merkle_root,
+                timestamp,
+                bits,
+                nonce,
+                all,
+                version_override,
+                timestamp_offset,
+                zero_hashes,
+            } => {
+                let (flags, config) = build_block_flags_and_config(
+                    version, prev_hash, merkle_root, timestamp, bits, nonce, all,
+                    version_override, timestamp_offset, zero_hashes
+                );
+                break_block(block_header, flags, config);
             },
             Commands::Tx { txscount, .. } => transaction(txscount), // TODO: Implement params into transaction generator
             Commands::Block { txscount } => block(txscount),
@@ -131,7 +174,7 @@ pub fn handle() {
     println!("Program finalized 👋");
 }
 
-fn build_flags_vector(
+fn build_transaction_flags_vector(
     version: bool, 
     txid: bool, 
     vout: bool, 
@@ -163,6 +206,46 @@ fn build_flags_vector(
     flags
 }
 
+fn build_block_flags_and_config(
+    version: bool,
+    prev_hash: bool,
+    merkle_root: bool,
+    timestamp: bool,
+    bits: bool,
+    nonce: bool,
+    all: bool,
+    version_override: Option<i32>,
+    timestamp_offset: Option<i64>,
+    zero_hashes: bool,
+) -> (Vec<String>, Vec<String>) {
+    let mut flags = Vec::new();
+    let mut config = Vec::new();
+    
+    if all {
+        flags.push("--all".to_string());
+    } else {
+        if version { flags.push("--version".to_string()); }
+        if prev_hash { flags.push("--prev-hash".to_string()); }
+        if merkle_root { flags.push("--merkle-root".to_string()); }
+        if timestamp { flags.push("--timestamp".to_string()); }
+        if bits { flags.push("--bits".to_string()); }
+        if nonce { flags.push("--nonce".to_string()); }
+    }
+    
+    // Configuration options
+    if let Some(override_val) = version_override {
+        config.push(format!("--version-override={}", override_val));
+    }
+    if let Some(offset) = timestamp_offset {
+        config.push(format!("--timestamp-offset={}", offset));
+    }
+    if zero_hashes {
+        config.push("--zero-hashes".to_string());
+    }
+    
+    (flags, config)
+}
+
 fn help() {
     println!("Available commands:\n");
     println!("[Utils]");
@@ -187,6 +270,20 @@ fn help() {
     println!("    --witness         - Invalidate witness data");
     println!("    --locktime        - Invalidate transaction locktime");
     println!("    --all             - Invalidate all transaction fields");
+    println!("");
+    println!("break-block <block_header> [FLAGS]    - Break/invalidate specific fields of a block");
+    println!("  Available flags:");
+    println!("    --version         - Invalidate block version");
+    println!("    --prev-hash       - Invalidate previous block hash");
+    println!("    --merkle-root     - Invalidate merkle root");
+    println!("    --timestamp       - Invalidate timestamp");
+    println!("    --bits            - Invalidate difficulty bits");
+    println!("    --nonce           - Invalidate nonce");
+    println!("    --all             - Invalidate all block fields");
+    println!("  Configuration options:");
+    println!("    --version-override <value>  - Override version with specific value");
+    println!("    --timestamp-offset <secs>   - Add/subtract seconds to timestamp");
+    println!("    --zero-hashes               - Use zero hashes instead of random");
     println!("");
     println!("[Generate]");
     println!("tx <txscount> [params...]             - Generate one or more transactions");
@@ -241,6 +338,17 @@ fn break_transaction(raw_transaction: String, flags: Vec<String>) {
     
     let result = Generator::break_transaction(raw_transaction, flags);
     println!("🔨 Transaction Breaking Result:");
+    println!("{}", result);
+}
+
+fn break_block(block_header: String, flags: Vec<String>, config: Vec<String>) {
+    if flags.is_empty() {
+        println!("No invalidation flags specified. Use 'help' for usage information.");
+        return;
+    }
+    
+    let result = Generator::break_block(block_header, flags, config);
+    println!("🔨 Block Breaking Result:");
     println!("{}", result);
 }
 

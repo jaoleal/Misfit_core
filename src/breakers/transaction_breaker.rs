@@ -70,7 +70,7 @@ impl TransactionInvalidator {
     }
 
     fn invalidate_version(v: bitcoin::blockdata::transaction::Version) -> bitcoin::blockdata::transaction::Version {
-        bitcoin::blockdata::transaction::Version(v.0 + 1)
+        bitcoin::blockdata::transaction::Version(v.0 + 15)
     }
     
     fn invalidate_locktime(lt: bitcoin::absolute::LockTime) -> bitcoin::absolute::LockTime {

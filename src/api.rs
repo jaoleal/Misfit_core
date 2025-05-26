@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use misfit_core::transaction::random::transaction::TxParams;
 use misfit_core::transaction::generator::GenerateTx;
 use misfit_core::block::generate_blocks::GenerateBlock;
-use misfit_core::breakers::{decoder_tools, transaction_breaker};
+use misfit_core::breakers::{decoder_tools, transaction_breaker, block_breaker};
 
 pub struct Generator {}
 
@@ -113,6 +113,90 @@ impl Generator {
         result
     }
 
+    pub fn break_block(block_header: String, cli_flags: Vec<String>, cli_config: Vec<String>) -> String {
+        // Parse CLI flags to BlockField vector
+        let block_fields = Self::parse_cli_flags_to_block_fields(cli_flags);
+        
+        if block_fields.is_empty() {
+            return "No invalidation flags specified. Use 'help' for usage information.".to_string();
+        }
+
+        // Parse configuration options
+        let processing_config = Self::parse_cli_config_to_processing_config(cli_config, block_fields);
+
+        // Decode the block header
+        let decoded_header = match Self::decoder_block_header(block_header.clone()) {
+            Ok(header) => header,
+            Err(e) => return format!("Error decoding block header: {}", e),
+        };
+
+        // Create block from header for processing
+        let original_block = decoder_tools::BlockUtils::create_minimal_block_from_header(decoded_header.clone());
+
+        // Process the block using BlockProcessor
+        let processor = block_breaker::BlockProcessor::new(processing_config.clone());
+        let broken_block = processor.process_block(&original_block);
+
+        // Build the result string
+        let mut result = String::new();
+        
+        // List which fields are being invalidated
+        result.push_str("Breaking the following block fields:\n");
+        
+        if processing_config.fields_to_modify.contains(&block_breaker::BlockField::All) {
+            result.push_str("  - ALL FIELDS\n");
+        } else {
+            for field in &processing_config.fields_to_modify {
+                match field {
+                    block_breaker::BlockField::Version => result.push_str("  - Block Version\n"),
+                    block_breaker::BlockField::PrevBlockHash => result.push_str("  - Previous Block Hash\n"),
+                    block_breaker::BlockField::MerkleRoot => result.push_str("  - Merkle Root\n"),
+                    block_breaker::BlockField::Timestamp => result.push_str("  - Timestamp\n"),
+                    block_breaker::BlockField::Bits => result.push_str("  - Difficulty Bits\n"),
+                    block_breaker::BlockField::Nonce => result.push_str("  - Nonce\n"),
+                    _ => {}
+                }
+            }
+        }
+
+        // Add configuration info
+        if let Some(version_override) = processing_config.version_override {
+            result.push_str(&format!("  - Version Override: {}\n", version_override));
+        }
+        if let Some(timestamp_offset) = processing_config.timestamp_offset {
+            result.push_str(&format!("  - Timestamp Offset: {} seconds\n", timestamp_offset));
+        }
+        if !processing_config.randomize_hashes {
+            result.push_str("  - Using zero hashes instead of random\n");
+        }
+
+        // Display original header info
+        result.push_str(&format!("\nOriginal Block Header:\n"));
+        result.push_str(&format!("  Version: {}\n", decoded_header.version.to_consensus()));
+        result.push_str(&format!("  Previous Block: {}\n", decoded_header.prev_blockhash));
+        result.push_str(&format!("  Merkle Root: {}\n", decoded_header.merkle_root));
+        result.push_str(&format!("  Timestamp: {}\n", decoded_header.time));
+        result.push_str(&format!("  Bits: 0x{:08x}\n", decoded_header.bits.to_consensus()));
+        result.push_str(&format!("  Nonce: {}\n", decoded_header.nonce));
+        result.push_str(&format!("  Block Hash: {}\n", decoded_header.block_hash()));
+
+        // Display broken header info
+        result.push_str(&format!("\nBroken Block Header:\n"));
+        result.push_str(&format!("  Version: {}\n", broken_block.header.version.to_consensus()));
+        result.push_str(&format!("  Previous Block: {}\n", broken_block.header.prev_blockhash));
+        result.push_str(&format!("  Merkle Root: {}\n", broken_block.header.merkle_root));
+        result.push_str(&format!("  Timestamp: {}\n", broken_block.header.time));
+        result.push_str(&format!("  Bits: 0x{:08x}\n", broken_block.header.bits.to_consensus()));
+        result.push_str(&format!("  Nonce: {}\n", broken_block.header.nonce));
+        result.push_str(&format!("  Block Hash: {}\n", broken_block.header.block_hash()));
+
+        // Display hex representation of broken header
+        let broken_header_hex = hex::encode(encode::serialize(&broken_block.header));
+        result.push_str(&format!("\nBroken Block Header (Hex):\n{}\n", broken_header_hex));
+        
+        result
+    }
+
     /// Convert CLI flags (from clap) to InvalidationFlag HashSet
     fn parse_cli_flags_to_invalidation_flags(cli_flags: Vec<String>) -> HashSet<transaction_breaker::InvalidationFlag> {
         let mut flags = HashSet::new();
@@ -141,6 +225,72 @@ impl Generator {
         }
 
         flags
+    }
+
+    /// Convert CLI flags to BlockField vector
+    fn parse_cli_flags_to_block_fields(cli_flags: Vec<String>) -> Vec<block_breaker::BlockField> {
+        let mut fields = Vec::new();
+
+        for flag in cli_flags {
+            let block_field = match flag.as_str() {
+                "--version" => Some(block_breaker::BlockField::Version),
+                "--prev-hash" => Some(block_breaker::BlockField::PrevBlockHash),
+                "--merkle-root" => Some(block_breaker::BlockField::MerkleRoot),
+                "--timestamp" => Some(block_breaker::BlockField::Timestamp),
+                "--bits" => Some(block_breaker::BlockField::Bits),
+                "--nonce" => Some(block_breaker::BlockField::Nonce),
+                "--all" => Some(block_breaker::BlockField::All),
+                _ => {
+                    println!("Warning: Unknown block field flag '{}' ignored", flag);
+                    None
+                }
+            };
+
+            if let Some(field) = block_field {
+                fields.push(field);
+            }
+        }
+
+        fields
+    }
+
+    /// Convert CLI config options to ProcessingConfig
+    fn parse_cli_config_to_processing_config(
+        cli_config: Vec<String>, 
+        fields: Vec<block_breaker::BlockField>
+    ) -> block_breaker::ProcessingConfig {
+        let mut config = block_breaker::ProcessingConfig {
+            fields_to_modify: fields,
+            version_override: None,
+            timestamp_offset: None,
+            randomize_hashes: true, // default to random hashes
+        };
+
+        for config_option in cli_config {
+            if config_option.starts_with("--version-override=") {
+                if let Some(value_str) = config_option.strip_prefix("--version-override=") {
+                    if let Ok(value) = value_str.parse::<i32>() {
+                        config.version_override = Some(value);
+                    } else {
+                        println!("Warning: Invalid version override value '{}' ignored", value_str);
+                    }
+                }
+            } else if config_option.starts_with("--timestamp-offset=") {
+                if let Some(value_str) = config_option.strip_prefix("--timestamp-offset=") {
+                    if let Ok(value) = value_str.parse::<i64>() {
+                        config.timestamp_offset = Some(value);
+                    } else {
+                        println!("Warning: Invalid timestamp offset value '{}' ignored", value_str);
+                    }
+                }
+            } else if config_option == "--zero-hashes" {
+                config.randomize_hashes = false;
+            } else {
+                println!("Warning: Unknown config option '{}' ignored", config_option);
+            }
+        }
+
+        config
     }
 
 /* 
