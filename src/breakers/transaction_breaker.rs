@@ -1,12 +1,10 @@
-use sha2::{Sha256, Digest};
 use std::collections::HashSet;
-use bitcoin::{Transaction, TxIn, TxOut, Witness, OutPoint, ScriptBuf, Amount};
-use bitcoin::blockdata::script::Script;
+use bitcoin::{Transaction, TxIn, TxOut, Witness, ScriptBuf, Amount};
 
 // Define available invalidation flags
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum InvalidationFlag {
-    Version,
+    Version,    
     InputTxid,
     InputVout,
     InputScriptSig,
