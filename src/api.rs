@@ -1,4 +1,4 @@
-use bitcoin::consensus::encode;
+use bitcoin::consensus::{encode};
 use bitcoin::block::Header;
 use bitcoin::Transaction;
 use std::collections::HashSet;
@@ -109,6 +109,8 @@ impl Generator {
         // Display results
         result.push_str(&format!("\nInputed Transaction:\n{}\n\n", transaction));
         result.push_str(&format!("Invalidated Transaction:\n{:#?}", invalid_tx));
+        result.push_str(&format!("Invalidated Raw Transaction:\n{:#?}\n\n", encode::serialize_hex(&invalid_tx)));
+
         
         result
     }
