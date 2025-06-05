@@ -196,7 +196,6 @@ impl BlockBreaker {
         }
     }
 
-    // Create a minimal random block
     pub fn create_random_block() -> Block {
         let header = Self::create_random_header();
         BlockUtils::create_minimal_block_from_header(header)
