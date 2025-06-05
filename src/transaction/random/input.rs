@@ -62,8 +62,8 @@ impl RandomInput for TxIn {
         TxIn {
             previous_output: outpoint,
             script_sig: script,
-            sequence: sequence,
-            witness: witness,
+            sequence,
+            witness,
         }
     }
 }

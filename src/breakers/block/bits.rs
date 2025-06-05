@@ -8,7 +8,6 @@ impl BitsProcessor {
     pub fn process_bits(bits: u32) -> u32 {
         // XOR with mask to modify difficulty
         let modified_bits = bits ^ 0x00FFFFFF;
-        println!("Modified bits from 0x{:08x} to 0x{:08x}", bits, modified_bits);
         modified_bits
     }
 
@@ -109,8 +108,6 @@ impl BitsProcessor {
     /// Flip specific bits in the difficulty target
     pub fn flip_bits_pattern(bits: u32, pattern: u32) -> u32 {
         let modified = bits ^ pattern;
-        println!("Flipped bits 0x{:08x} with pattern 0x{:08x} = 0x{:08x}", 
-                bits, pattern, modified);
         modified
     }
 

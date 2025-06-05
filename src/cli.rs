@@ -252,7 +252,6 @@ fn help() {
     println!("help                                  - Show help message");
     println!("clear                                 - Clear terminal screen");
     println!("exit");
-    println!("");
     println!("\x1b[32m[Decode]\x1b[0m");
     println!("decode-transaction <raw_tx>           - Decode a raw transaction");
     println!("decode-block <block_header>           - Decode a block header");
@@ -270,7 +269,6 @@ fn help() {
     println!("    --witness         - Invalidate witness data");
     println!("    --locktime        - Invalidate transaction locktime");
     println!("    --all             - Invalidate all transaction fields");
-    println!("");
     println!("\x1b[34mbreak-block <block_header> [FLAGS]\x1b[0m - Break/invalidate specific fields of a block");
     println!("  Available flags:");
     println!("    --version         - Invalidate block version");
@@ -284,13 +282,11 @@ fn help() {
     println!("    --version-override <value>  - Override version with specific value");
     println!("    --timestamp-offset <secs>   - Add/subtract seconds to timestamp");
     println!("    --zero-hashes               - Use zero hashes instead of random");
-    println!("");
     println!("\x1b[32m[Generate]\x1b[0m");
     println!("tx <txscount> [params...]             - Generate one or more transactions");
     println!(
         "block <txscount>                      - Generate new block with one or more transactions"
     );
-    println!("");
     println!("\x1b[32m[Regtest]\x1b[0m");
     println!(
         "get-blockby-height <height>           - Get a block at specific height in the regtest"

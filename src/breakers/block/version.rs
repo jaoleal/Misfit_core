@@ -4,14 +4,12 @@ pub struct VersionProcessor;
 
 impl VersionProcessor {
     /// Process the version of the block with optional override
-    pub fn process_version(version: i32, version_override: Option<i32>) -> i32 {
+    pub fn process_version(_version: i32, version_override: Option<i32>) -> i32 {
         if let Some(override_version) = version_override {
-            println!("Overriding block version from {} to {}", version, override_version);
             override_version
         } else {
             // Default behavior: set version to maximum valid value
             let modified_version = 0x3FFFFFFF;
-            println!("Modified block version from {} to {}", version, modified_version);
             modified_version
         }
     }

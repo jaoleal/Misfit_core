@@ -44,7 +44,7 @@ impl RandomBlock for Block {
         });
 
         Block {
-            header: header,
+            header,
             txdata: tx_data.clone(),
         }
     }
