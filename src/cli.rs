@@ -2,8 +2,6 @@ use std::io;
 use std::io::Write;
 
 use clap::{Parser, Subcommand};
-
-use misfit_core::regtest_pack::regtest::RegtestManager;
 use crate::api::Generator;
 
 #[derive(Parser)]
@@ -94,7 +92,7 @@ pub enum Commands {
 }
 
 pub fn handle() {
-    let regtest_manager = RegtestManager::new("bitcoinhos", "-regtest");
+    let regtest_manager = Generator::regtest_invocation("bitcoinhos", "-regtest");
 
     loop {
         print!("> ");

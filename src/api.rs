@@ -1,6 +1,7 @@
 use bitcoin::consensus::{encode};
 use bitcoin::block::Header;
 use bitcoin::Transaction;
+use misfit_core::regtest_pack::regtest::RegtestManager;
 use std::collections::HashSet;
 use misfit_core::transaction::random::transaction::TxParams;
 use misfit_core::block::random::block::BlockParams;
@@ -39,7 +40,6 @@ impl Generator {
         .join("\n---\n")
     }
 
-    // TODO: Implement params into transaction generator
     pub fn transaction(count: u32) -> String {
         let mut raw_tx: Vec<String> = vec![];
         let mut txid: Vec<String> = vec![];
@@ -68,6 +68,9 @@ impl Generator {
 
     pub fn decoder_block_header(block_header: String) -> Result<Header, Box<dyn std::error::Error>> {
         decoder_tools::BlockUtils::decode_header_from_hex(&block_header)
+    }
+    pub fn regtest_invocation(name_of_wallet:&str,mode_of_cli:&str ) -> RegtestManager{
+        RegtestManager::new(&name_of_wallet, &mode_of_cli)
     }
 
     pub fn break_transaction(transaction: String, cli_flags: Vec<String>) -> String {
