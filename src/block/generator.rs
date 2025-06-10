@@ -1,6 +1,6 @@
 use bitcoin::Block;
 use super::random::block::{BlockParams, RandomBlock};
-use bitcoin::{absolute::LockTime, transaction::Version, TxOut, ScriptBuf, Sequence, Witness, };
+use bitcoin::{absolute::LockTime, transaction::Version, TxOut, ScriptBuf, Sequence, Witness, OutPoint};
 
 use crate::transaction::{
         generator::GenerateTx,
@@ -13,10 +13,10 @@ impl GenerateBlock {
     pub fn valid_random(mut params: BlockParams) -> Block {
         let null_value  = TxOut::NULL;
         let coinbase_input = InputParams {
-            outpoint: None, // Coinbase transactions don't spend existing outputs
-            script: Some(ScriptBuf::new()), // Empty script or coinbase data
-            sequence: Some(Sequence::MAX), // Typically 0xFFFFFFFF for coinbase
-            witness: Some(Witness::new()), // Empty witness for coinbase
+            outpoint: Some(OutPoint::null()), 
+            script: Some(ScriptBuf::new()), 
+            sequence: Some(Sequence::MAX), 
+            witness: Some(Witness::new()), 
         };       
         let coinbase_output = OutputParams  {
             value: Some(null_value.value),
