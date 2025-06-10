@@ -77,7 +77,7 @@ pub enum Commands {
         campuses: Vec<String>,
     },
     Block {
-        #[arg(default_value_t = 1)]
+        #[arg(default_value_t = 2)]
         txscount: u32,
     },
     #[command(name = "regtest-start")]
@@ -354,7 +354,6 @@ fn block(txscount: u32) {
     let block = Generator::block(txscount);
     println!("Block: {}", block);
 }
-
 fn clear() {
     print!("\x1B[2J\x1B[1;1H");
     io::stdout().flush().unwrap();

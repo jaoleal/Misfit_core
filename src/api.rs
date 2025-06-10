@@ -12,7 +12,7 @@ use misfit_core::breakers::{decoder_tools, transaction, block};
 pub struct Generator {}
 
 impl Generator {
-    pub fn block(tx_count: u32) -> String {
+    pub fn block(tx_count:u32) -> String {
         let mut txs: Vec<Transaction> = vec![];
         let mut raw_tx: Vec<String> = vec![];
         let mut tx_ids: Vec<String> = vec![];
@@ -301,10 +301,5 @@ impl Generator {
         config
     }
 
-/* 
-    pub fn break_block(flags: Vec<String>) -> String {
-        // TODO: Implement block breaking functionality
-        "Block breaking not yet implemented".to_string()
-    }
-*/
+
 }

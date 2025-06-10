@@ -58,6 +58,17 @@ mod tests {
         assert!(result.contains("TxID:"));
         
     }
+      #[test]
+    //for now sometimes it will break because we dont have error handling for blocks with zero txs
+    fn generate_zero_tx_block() {
+        let result = Generator::block(0);
+        // Split by separator and check structure
+        let sections: Vec<&str> = result.split("\n---\n").collect();
+        assert_eq!(sections.len(), 3);
+        assert!(result.contains("Header"));
+        assert!(result.contains("Raw txs:"));
+        assert!(result.contains("TxID:"));  
+    }
 
     #[test]
     fn test_generate_block_with_multiple_transactions() {
@@ -166,8 +177,8 @@ mod tests {
 
     #[test]
     fn test_regtest_invocation() {
-        let wallet_name = "test_wallet";
-        let cli_mode = "test_mode";
+        let wallet_name = "blablabla";
+        let cli_mode = "-regtest";
         
         let _regtest_manager = Generator::regtest_invocation(wallet_name, cli_mode);
         
@@ -207,7 +218,7 @@ mod tests {
 
     #[test]
     fn test_break_transaction_with_no_flags() {
-        let raw_tx = "dummy_tx".to_string();
+        let raw_tx = "4f6e3b7201e8370e51a135fb8e468e8188ea580b5a6c74a92b5cab5af2785bd307297be9a808e47956006b6b5dbe0118a478e14edc0b651976a9148840c86761418aa78e7667e8e7e427c4e955989588ac59500852".to_string();
         let cli_flags = vec![];
         
         let result = Generator::break_transaction(raw_tx, cli_flags);
@@ -218,7 +229,7 @@ mod tests {
 
     #[test]
     fn test_break_block_with_no_flags() {
-        let block_header = "dummy_header".to_string();
+        let block_header = "02000000de9ca7b23a61cc050a2286af1ee9a4f2fc31b3eb32adbf7b030000000000000064580288f07b0bf1670dad42dbd8aa8c0cd283ff61515f8a8e9cf4f3b973d450f475b2526eba0419869a148f".to_string();
         let cli_flags = vec![];
         let cli_config = vec![];
         
