@@ -7,10 +7,10 @@ use super::{
 };
 
 pub struct InputParams {
-    outpoint: Option<OutPoint>,
-    script: Option<ScriptBuf>,
-    sequence: Option<Sequence>,
-    witness: Option<Witness>,
+    pub outpoint: Option<OutPoint>,
+    pub script: Option<ScriptBuf>,
+    pub sequence: Option<Sequence>,
+    pub witness: Option<Witness>,
 }
 
 impl Default for InputParams {

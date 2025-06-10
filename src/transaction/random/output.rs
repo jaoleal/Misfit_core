@@ -4,9 +4,9 @@ use secp256k1::rand::{self, Rng};
 use super::script::{RandomScript, ScriptParams};
 
 pub struct OutputParams {
-    value: Option<Amount>,
-    script_pubkey: Option<ScriptBuf>,
-    script_params: Option<ScriptParams>,
+    pub value: Option<Amount>,
+    pub(crate) script_pubkey: Option<ScriptBuf>,
+    pub script_params: Option<ScriptParams>,
 }
 
 impl Default for OutputParams {
