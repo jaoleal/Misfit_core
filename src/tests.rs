@@ -172,7 +172,7 @@ mod tests {
         // Invalid values should be ignored, defaults should be used
         assert_eq!(result.version_override, None);
         assert_eq!(result.timestamp_offset, None);
-        assert_eq!(result.randomize_hashes, true); // default
+        assert_eq!(result.randomize_hashes, true); 
     }
 
     #[test]
