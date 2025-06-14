@@ -37,7 +37,7 @@ impl GenerateBlock {
             Some(ref mut txs) => {
                 txs.insert(0, coinbase);
             }
-            _none => {
+            None => {
                 params.txs = Some(vec![coinbase]);
             }
         }

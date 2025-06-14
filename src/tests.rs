@@ -48,9 +48,8 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_single_block() {
+    fn test_generate_one_block_with_one_transaction() {
         let result = Generator::block(1);
-        // Split by separator and check structure
         let sections: Vec<&str> = result.split("\n---\n").collect();
         assert_eq!(sections.len(), 3);
         assert!(result.contains("Header"));

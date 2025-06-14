@@ -77,7 +77,7 @@ pub enum Commands {
         campuses: Vec<String>,
     },
     Block {
-        #[arg(default_value_t = 2)]
+        #[arg(default_value_t = 1)]
         txscount: u32,
     },
     #[command(name = "regtest-start")]
