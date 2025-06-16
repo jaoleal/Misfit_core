@@ -1,7 +1,8 @@
 use bitcoin::{
     hashes::Hash,
-    key::{Keypair, Secp256k1, TweakedKeypair, TweakedPublicKey},
-    NetworkKind, PrivateKey, PublicKey, ScriptBuf, ScriptHash, WScriptHash, XOnlyPublicKey,
+    secp256k1::{All, Secp256k1},
+    key::{Keypair,TweakedKeypair, TweakedPublicKey},
+    PrivateKey, PublicKey, ScriptBuf, ScriptHash, WScriptHash, XOnlyPublicKey,
 };
 use secp256k1::rand::{self, Rng};
 
@@ -25,11 +26,11 @@ impl Default for ScriptParams {
 }
 
 pub trait RandomScript {
-    fn random(params: ScriptParams) -> ScriptBuf;
+    fn random(params: ScriptParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptBuf;
 }
 
 impl RandomScript for ScriptBuf {
-    fn random(params: ScriptParams) -> ScriptBuf {
+    fn random(params: ScriptParams, curve_secp: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptBuf {
         let script_type =
             params
                 .script_type
@@ -45,21 +46,21 @@ impl RandomScript for ScriptBuf {
 
         match script_type {
             ScriptTypes::P2PK => ScriptBuf::new_p2pk(&PublicKey::from_private_key(
-                &Secp256k1::new(),
-                &PrivateKey::generate(NetworkKind::Main),
+                curve_secp,
+                privatekey,
             )),
             ScriptTypes::P2PKH => ScriptBuf::new_p2pkh(
                 &PublicKey::from_private_key(
-                    &Secp256k1::new(),
-                    &PrivateKey::generate(NetworkKind::Main),
+                    curve_secp  ,
+                    privatekey,
                 )
                 .pubkey_hash(),
             ),
             ScriptTypes::P2SH => ScriptBuf::new_p2sh(&ScriptHash::all_zeros()),
             ScriptTypes::P2TR => ScriptBuf::new_p2tr(
-                &Secp256k1::new(),
+                curve_secp,
                 XOnlyPublicKey::from_keypair(&Keypair::new(
-                    &Secp256k1::new(),
+                    curve_secp,
                     &mut rand::thread_rng(),
                 ))
                 .0,
@@ -67,13 +68,13 @@ impl RandomScript for ScriptBuf {
             ),
             ScriptTypes::P2TWEAKEDTR => ScriptBuf::new_p2tr_tweaked(
                 TweakedPublicKey::from_keypair(TweakedKeypair::dangerous_assume_tweaked(
-                    Keypair::new(&Secp256k1::new(), &mut rand::thread_rng()),
+                    Keypair::new(curve_secp, &mut rand::thread_rng()),
                 )),
             ),
             ScriptTypes::P2WPKH => ScriptBuf::new_p2wpkh(
                 &PublicKey::from_private_key(
-                    &Secp256k1::new(),
-                    &PrivateKey::generate(NetworkKind::Main),
+                    curve_secp,
+                    privatekey,
                 )
                 .wpubkey_hash()
                 .unwrap(),

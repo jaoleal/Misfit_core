@@ -1,4 +1,4 @@
-use bitcoin::{hashes::Hash, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness};
+use bitcoin::{hashes::Hash, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness,PrivateKey, secp256k1::{All, Secp256k1}};
 use secp256k1::rand::{self, Rng};
 
 use super::{
@@ -25,11 +25,11 @@ impl Default for InputParams {
 }
 
 pub trait RandomInput {
-    fn random(params: InputParams) -> TxIn;
+    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxIn;
 }
 
 impl RandomInput for TxIn {
-    fn random(params: InputParams) -> TxIn {
+    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxIn {
         let outpoint = params.outpoint.unwrap_or_else(|| {
             // Create a random transaction for use as outpoint
             let tx_id = Transaction::random(TxParams {
@@ -45,7 +45,7 @@ impl RandomInput for TxIn {
                     witness: None,
                 }),
                 output: Some(OutputParams::default()),
-            })
+            }, curve, privatekey)
             .compute_txid();
 
             return OutPoint {

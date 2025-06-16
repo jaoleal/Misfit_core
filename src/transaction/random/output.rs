@@ -1,4 +1,4 @@
-use bitcoin::{Amount, ScriptBuf, TxOut};
+use bitcoin::{Amount, ScriptBuf, TxOut,PrivateKey, secp256k1::{All, Secp256k1}};
 use secp256k1::rand::{self, Rng};
 
 use super::script::{RandomScript, ScriptParams};
@@ -20,11 +20,11 @@ impl Default for OutputParams {
 }
 
 pub trait RandomOutput {
-    fn random(params: OutputParams) -> TxOut;
+    fn random(params: OutputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxOut;
 }
 
 impl RandomOutput for TxOut {
-    fn random(params: OutputParams) -> TxOut {
+    fn random(params: OutputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxOut {
         // TODO: Fee estimator
         // TODO: Amount random value needs to be more than the sum of inputs and fee
         let amount = params
@@ -32,7 +32,7 @@ impl RandomOutput for TxOut {
             .unwrap_or_else(|| Amount::from_sat(rand::thread_rng().gen::<u64>()));
         let script = params
             .script_pubkey
-            .unwrap_or_else(|| ScriptBuf::random(params.script_params.unwrap_or_default()));
+            .unwrap_or_else(|| ScriptBuf::random(params.script_params.unwrap_or_default(),curve, privatekey));
 
         TxOut {
             value: amount,

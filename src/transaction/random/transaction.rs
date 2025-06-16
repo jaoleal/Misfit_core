@@ -4,7 +4,7 @@ use super::{
     output::{OutputParams, RandomOutput},
     version::RandomVersion,
 };
-use bitcoin::{absolute::LockTime, transaction::Version, Transaction, TxIn, TxOut};
+use bitcoin::{absolute::LockTime, key::PrivateKey, secp256k1::{All, Secp256k1}, transaction::Version, Transaction, TxIn, TxOut};
 
 pub struct TxParams {
     pub(crate) version: Option<Version>,
@@ -25,19 +25,19 @@ impl Default for TxParams {
 }
 
 pub trait RandomTransacion {
-    fn random(params: TxParams) -> Transaction;
+    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction;
 }
 
 impl RandomTransacion for Transaction {
-    fn random(params: TxParams) -> Transaction {
+    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction {
         let input_params = params.input.unwrap_or_default();
         let output_params = params.output.unwrap_or_default();
 
         Transaction {
             version: params.version.unwrap_or_else(|| Version::random()),
             lock_time: params.lock_time.unwrap_or_else(|| LockTime::random()),
-            input: vec![TxIn::random(input_params)],
-            output: vec![TxOut::random(output_params)],
+            input: vec![TxIn::random(input_params, curve, privatekey)],
+            output: vec![TxOut::random(output_params, curve, privatekey)],
         }
     }
 }
