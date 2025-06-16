@@ -15,8 +15,13 @@ pub enum ScriptTypes {
     P2WPKH,
     P2WSH,
 }
+pub struct ScriptInfo {
+    pub script: ScriptBuf,
+    pub script_type: ScriptTypes,
+}
+
 pub struct ScriptParams {
-    script_type: Option<ScriptTypes>,
+    pub script_type: Option<ScriptTypes>,
 }
 
 impl Default for ScriptParams {
@@ -26,11 +31,11 @@ impl Default for ScriptParams {
 }
 
 pub trait RandomScript {
-    fn random(params: ScriptParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptBuf;
+    fn random(params: ScriptParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptInfo;
 }
 
 impl RandomScript for ScriptBuf {
-    fn random(params: ScriptParams, curve_secp: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptBuf {
+    fn random(params: ScriptParams, curve_secp: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptInfo {
         let script_type =
             params
                 .script_type
@@ -44,7 +49,7 @@ impl RandomScript for ScriptBuf {
                     _ => ScriptTypes::P2WSH,
                 });
 
-        match script_type {
+        let script = match script_type {
             ScriptTypes::P2PK => ScriptBuf::new_p2pk(&PublicKey::from_private_key(
                 curve_secp,
                 privatekey,
@@ -80,6 +85,10 @@ impl RandomScript for ScriptBuf {
                 .unwrap(),
             ),
             ScriptTypes::P2WSH => ScriptBuf::new_p2wsh(&WScriptHash::all_zeros()),
+        };
+        ScriptInfo {
+            script,
+            script_type,
         }
     }
 }

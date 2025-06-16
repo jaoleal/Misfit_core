@@ -1,7 +1,7 @@
 use super::{
-    input::{InputParams, RandomInput},
+    input::{InputParams, RandomInput, InputInfo},
     locktime::RandomLockTime,
-    output::{OutputParams, RandomOutput},
+    output::{OutputParams, RandomOutput, OutputInfo},
     version::RandomVersion,
 };
 use bitcoin::{absolute::LockTime, key::PrivateKey, secp256k1::{All, Secp256k1}, transaction::Version, Transaction, TxIn, TxOut};
@@ -11,6 +11,12 @@ pub struct TxParams {
     pub(crate) lock_time: Option<LockTime>,
     pub(crate) input: Option<InputParams>,
     pub(crate) output: Option<OutputParams>,
+}
+
+pub struct TransactionInfo {
+    pub transaction: Transaction,
+    pub input_info: Vec<InputInfo>,
+    pub output_info: Vec<OutputInfo>,
 }
 
 impl Default for TxParams {
@@ -25,19 +31,29 @@ impl Default for TxParams {
 }
 
 pub trait RandomTransacion {
-    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction;
+    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TransactionInfo;
 }
 
 impl RandomTransacion for Transaction {
-    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction {
+    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TransactionInfo {
         let input_params = params.input.unwrap_or_default();
         let output_params = params.output.unwrap_or_default();
 
-        Transaction {
+        // Gerar input e output com suas informações
+        let input_info = TxIn::random(input_params, curve, privatekey);
+        let output_info = TxOut::random(output_params, curve, privatekey);
+
+        let transaction = Transaction {
             version: params.version.unwrap_or_else(|| Version::random()),
             lock_time: params.lock_time.unwrap_or_else(|| LockTime::random()),
-            input: vec![TxIn::random(input_params, curve, privatekey)],
-            output: vec![TxOut::random(output_params, curve, privatekey)],
+            input: vec![input_info.txin.clone()],
+            output: vec![output_info.txout.clone()],
+        };
+
+        TransactionInfo {
+            transaction,
+            input_info: vec![input_info],
+            output_info: vec![output_info],
         }
     }
 }
