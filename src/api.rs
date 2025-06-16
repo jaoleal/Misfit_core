@@ -12,7 +12,7 @@ use misfit_core::breakers::{decoder_tools, transaction, block};
 pub struct Generator {}
 
 impl Generator {
-    pub fn block(tx_count: u32) -> String {
+    pub fn block(tx_count:u32) -> String {
         let mut txs: Vec<Transaction> = vec![];
         let mut raw_tx: Vec<String> = vec![];
         let mut tx_ids: Vec<String> = vec![];
@@ -208,7 +208,7 @@ impl Generator {
         result
     }
 
-    fn parse_cli_flags_to_invalidation_flags(cli_flags: Vec<String>) -> HashSet<transaction::flags::InvalidationFlag> {
+    pub fn parse_cli_flags_to_invalidation_flags(cli_flags: Vec<String>) -> HashSet<transaction::flags::InvalidationFlag> {
         let mut flags = HashSet::new();
 
         for flag in cli_flags {
@@ -237,7 +237,7 @@ impl Generator {
         flags
     }
 
-    fn parse_cli_flags_to_block_fields(cli_flags: Vec<String>) -> Vec<block::block::BlockField> {
+    pub fn parse_cli_flags_to_block_fields(cli_flags: Vec<String>) -> Vec<block::block::BlockField> {
         let mut fields = Vec::new();
 
         for flag in cli_flags {
@@ -263,7 +263,7 @@ impl Generator {
         fields
     }
 
-    fn parse_cli_config_to_processing_config(
+    pub fn parse_cli_config_to_processing_config(
         cli_config: Vec<String>, 
         fields: Vec<block::block::BlockField>
     ) -> block::block::ProcessingConfig {
@@ -301,10 +301,5 @@ impl Generator {
         config
     }
 
-/* 
-    pub fn break_block(flags: Vec<String>) -> String {
-        // TODO: Implement block breaking functionality
-        "Block breaking not yet implemented".to_string()
-    }
-*/
+
 }

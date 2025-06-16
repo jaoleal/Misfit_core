@@ -1,6 +1,5 @@
 use std::io;
 use std::io::Write;
-
 use clap::{Parser, Subcommand};
 use crate::api::Generator;
 
@@ -95,7 +94,7 @@ pub fn handle() {
     let regtest_manager = Generator::regtest_invocation("bitcoinhos", "-regtest");
 
     loop {
-        print!("> ");
+        print!("-> ");
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
@@ -355,7 +354,6 @@ fn block(txscount: u32) {
     let block = Generator::block(txscount);
     println!("Block: {}", block);
 }
-
 fn clear() {
     print!("\x1B[2J\x1B[1;1H");
     io::stdout().flush().unwrap();

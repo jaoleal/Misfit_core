@@ -1,14 +1,14 @@
 # Misfit-Core
 
-A tool for create specified invalid parameters for tests in bicoin.
+A tool for create specified valid or invalid scenarios for tests in bicoin on blocks and trasactions.
 
-## Documentation
 
-## run a regtest
-For run a regtest, with the bitcoin binaries installed
-```b
-bitcoind -regetst
-```
+## Dependencies
+ * Rust 
+ * Cargo
+ * Bitcoin
+
+ 
 ## Installation
 Clone the repo
 ```b
