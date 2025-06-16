@@ -11,36 +11,20 @@ pub struct GenerateBlock {}
 impl GenerateBlock {
 
     pub fn valid_random(mut params: BlockParams) -> Block {
-        let null_value  = TxOut::NULL;
-        let coinbase_input = InputParams {
-            outpoint: Some(OutPoint::null()), 
-            script: Some(ScriptBuf::new()), 
-            sequence: Some(Sequence::MAX), 
-            witness: Some(Witness::new()), 
-        };       
-        let coinbase_output = OutputParams  {
-            value: Some(null_value.value),
-            script_pubkey: Some(null_value.script_pubkey),
-            script_params: None,
-        };
-        //following a gambiarra to made the coinbase
-        let coinbase_params = TxParams {
-            version: Some(Version::ONE),
-            lock_time: Some(LockTime::ZERO),
-            input: Some(coinbase_input), 
-            output:Some(coinbase_output),
-        };        
+        let mut input_params = InputParams::default();
+        input_params.outpoint = Some(OutPoint::null());
+
+        let mut coinbase_params = TxParams::default();
+        coinbase_params.input = Some(input_params);
 
         let coinbase = GenerateTx::valid_random(coinbase_params);
 
-        match params.txs {
-            Some(ref mut txs) => {
-                txs.insert(0, coinbase);
-            }
-            None => {
-                params.txs = Some(vec![coinbase]);
-            }
-        }
+        let mut txs = params.txs.take().unwrap_or_default();
+        txs.insert(0, coinbase);
+        params.txs = Some(txs);
+
+        Block::random(params)
+    }
         Block::random(params)
     }
 }
