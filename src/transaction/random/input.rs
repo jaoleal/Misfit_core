@@ -36,7 +36,7 @@ impl Default for InputParams {
 }
 
 pub trait RandomInput {
-    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> InputInfo;
+    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxIn;
 }
 
 impl RandomInput for TxIn {
