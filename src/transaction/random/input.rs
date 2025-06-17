@@ -1,13 +1,25 @@
 use bitcoin::{
-    hashes::Hash, secp256k1::{All, Secp256k1}, sighash::{EcdsaSighashType, SighashCache},
-    transaction::Version, Amount, OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness
+    hashes::Hash, 
+    secp256k1::{All, Secp256k1}, 
+    sighash::{EcdsaSighashType, SighashCache},
+    transaction::Version, 
+    Amount, 
+    OutPoint, 
+    PrivateKey, 
+    PublicKey, 
+    ScriptBuf, 
+    Sequence, 
+    Transaction, 
+    TxIn, 
+    Txid, 
+    Witness
 };
 use secp256k1::rand::{self, Rng};
 
 use super::{
     output::OutputParams,
     transaction::{RandomTransacion, TxParams},
-    script::{ScriptTypes, ScriptInfo, RandomScript, ScriptParams},
+    script::{ScriptTypes, RandomScript, ScriptParams},
 };
 
 pub struct InputParams {
@@ -16,11 +28,6 @@ pub struct InputParams {
     pub sequence: Option<Sequence>,
     pub witness: Option<Witness>,
     pub script_params: Option<ScriptParams>,
-}
-
-pub struct InputInfo {
-    pub txin: TxIn,
-    pub script_type: ScriptTypes,
 }
 
 impl Default for InputParams {
@@ -61,7 +68,6 @@ impl RandomInput for TxIn {
                 curve,
                 privatekey,
             )
-            .transaction
             .compute_txid();
 
             OutPoint {
@@ -70,11 +76,8 @@ impl RandomInput for TxIn {
             }
         });
 
-        let script_info = match params.script {
-            Some(script) => ScriptInfo {
-                script,
-                script_type: ScriptTypes::P2WPKH, // changing for P2WPKH by default
-            },
+        let (script_buf, script_type) = match params.script {
+            Some(script) => (script, ScriptTypes::P2WPKH),
             None => ScriptBuf::random(
                 params.script_params.unwrap_or(ScriptParams {
                     script_type: Some(ScriptTypes::P2WPKH)
@@ -89,7 +92,8 @@ impl RandomInput for TxIn {
             .unwrap_or_else(|| Sequence::MAX);
 
         let witness = generate_signature_witness(
-            &script_info,
+            &script_type,
+            &script_buf,
             curve,
             privatekey,
             &outpoint,
@@ -106,7 +110,8 @@ impl RandomInput for TxIn {
 }
 
 fn generate_signature_witness(
-    script_info: &ScriptInfo,
+    script_type: &ScriptTypes,
+    script_buf: &ScriptBuf,
     curve: &Secp256k1<All>,
     privatekey: &PrivateKey,
     outpoint: &OutPoint,
@@ -126,13 +131,12 @@ fn generate_signature_witness(
 
     let mut sighash_cache = SighashCache::new(&temp_tx);
 
-    match script_info.script_type {
+    match script_type {
         ScriptTypes::P2WPKH => {
-            // P2WPKH signature (já implementado)
             let sighash = sighash_cache
                 .p2wpkh_signature_hash(
                     0,
-                    &script_info.script,
+                    script_buf,
                     Amount::from_sat(50_000),
                     EcdsaSighashType::All,
                 )
@@ -154,11 +158,10 @@ fn generate_signature_witness(
             witness_stack
         },
         ScriptTypes::P2WSH => {
-            // P2WSH signature
             let sighash = sighash_cache
                 .p2wsh_signature_hash(
                     0,
-                    &script_info.script,
+                    script_buf,
                     Amount::from_sat(50_000),
                     EcdsaSighashType::All,
                 )
@@ -175,12 +178,12 @@ fn generate_signature_witness(
             sig_ser.push(EcdsaSighashType::All as u8);
             
             witness_stack.push(sig_ser);
-            witness_stack.push(script_info.script.to_bytes());
+            witness_stack.push(script_buf.as_bytes().to_vec());
 
             witness_stack
         },
         ScriptTypes::P2TR => {
-            println!("Taproot singnature not implemented yet");
+            println!("Taproot signature not implemented yet");
             Witness::default()
         },
         ScriptTypes::P2TWEAKEDTR => {

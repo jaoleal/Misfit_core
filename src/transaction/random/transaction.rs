@@ -1,7 +1,7 @@
 use super::{
-    input::{InputParams, RandomInput, InputInfo},
+    input::{InputParams, RandomInput, },
     locktime::RandomLockTime,
-    output::{OutputParams, RandomOutput, OutputInfo},
+    output::{OutputParams, RandomOutput},
     version::RandomVersion,
 };
 use bitcoin::{absolute::LockTime, key::PrivateKey, secp256k1::{All, Secp256k1}, transaction::Version, Transaction, TxIn, TxOut};
@@ -13,11 +13,6 @@ pub struct TxParams {
     pub(crate) output: Option<OutputParams>,
 }
 
-pub struct TransactionInfo {
-    pub transaction: Transaction,
-    pub input_info: Vec<InputInfo>,
-    pub output_info: Vec<OutputInfo>,
-}
 
 impl Default for TxParams {
     fn default() -> Self {
@@ -46,8 +41,8 @@ impl RandomTransacion for Transaction {
         let transaction = Transaction {
             version: params.version.unwrap_or_else(|| Version::random()),
             lock_time: params.lock_time.unwrap_or_else(|| LockTime::random()),
-            input: vec![input_info.txin.clone()],
-            output: vec![output_info.txout.clone()],
+            input: vec![input_info.clone()],
+            output: vec![output_info.0.clone()],
         };
 
         transaction

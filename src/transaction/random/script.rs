@@ -6,6 +6,8 @@ use bitcoin::{
 };
 use secp256k1::rand::{self, Rng};
 
+
+#[derive(Clone)]
 pub enum ScriptTypes {
     P2PK,
     P2PKH,
@@ -14,10 +16,6 @@ pub enum ScriptTypes {
     P2TWEAKEDTR,
     P2WPKH,
     P2WSH,
-}
-pub struct ScriptInfo {
-    pub script: ScriptBuf,
-    pub script_type: ScriptTypes,
 }
 
 pub struct ScriptParams {
