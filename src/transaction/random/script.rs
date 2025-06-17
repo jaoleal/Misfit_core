@@ -35,7 +35,7 @@ pub trait RandomScript {
 }
 
 impl RandomScript for ScriptBuf {
-    fn random(params: ScriptParams, curve_secp: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptInfo {
+    fn random(params: ScriptParams, curve_secp: &Secp256k1<All>, privatekey: &PrivateKey) -> (ScriptBuf, ScriptTypes) {
         let script_type =
             params
                 .script_type
