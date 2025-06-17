@@ -86,9 +86,6 @@ impl RandomScript for ScriptBuf {
             ),
             ScriptTypes::P2WSH => ScriptBuf::new_p2wsh(&WScriptHash::all_zeros()),
         };
-        ScriptInfo {
-            script,
-            script_type,
-        }
+        (script, script_type)
     }
 }
