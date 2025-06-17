@@ -31,7 +31,7 @@ impl Default for ScriptParams {
 }
 
 pub trait RandomScript {
-    fn random(params: ScriptParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> ScriptInfo;
+    fn random(params: ScriptParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> (ScriptBuf, ScriptTypes);
 }
 
 impl RandomScript for ScriptBuf {
