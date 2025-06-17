@@ -34,7 +34,7 @@ impl RandomBlock for Block {
             let mut txs = vec![];
             for _ in 0..random {
                 let tx_info = GenerateTx::valid_random(TxParams::default());
-                txs.push(tx_info.transaction);
+                txs.push(tx_info);
             }
 
             txs
