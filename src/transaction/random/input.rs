@@ -96,14 +96,11 @@ impl RandomInput for TxIn {
             sequence,
         );
 
-        InputInfo {
-            txin: TxIn {
-                previous_output: outpoint,
-                script_sig: ScriptBuf::new(), // empty Scriptsig for P2WPKH
-                sequence,
-                witness,
-            },
-            script_type: script_info.script_type,
+        TxIn {
+            previous_output: outpoint,
+            script_sig: ScriptBuf::new(), // empty Scriptsig for P2WPKH
+            sequence,
+            witness,
         }
     }
 }
