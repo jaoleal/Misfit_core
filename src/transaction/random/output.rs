@@ -29,7 +29,7 @@ pub trait RandomOutput {
 }
 
 impl RandomOutput for TxOut {
-    fn random(params: OutputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> OutputInfo {
+    fn random(params: OutputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxOut {
         let amount = params
             .value
             .unwrap_or_else(|| Amount::from_sat(rand::thread_rng().gen::<u64>()));
