@@ -40,7 +40,7 @@ pub trait RandomInput {
 }
 
 impl RandomInput for TxIn {
-    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> InputInfo {
+    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxIn {
         let outpoint = params.outpoint.unwrap_or_else(|| {
             let txid = Transaction::random(
                 TxParams {
