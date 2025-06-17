@@ -10,7 +10,7 @@ pub struct GenerateTx {}
 impl GenerateTx {
     pub fn valid_random(params: TxParams) -> TransactionInfo {
         let curve = Secp256k1::new();
-        let privatekey = &PrivateKey::generate(NetworkKind::Main);
-        Transaction::random(params, &curve, privatekey)
+        let privatekey = PrivateKey::generate(NetworkKind::Main);
+        Transaction::random(params, &curve, &privatekey)
     }
 }
