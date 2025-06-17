@@ -46,12 +46,9 @@ impl RandomOutput for TxOut {
             ),
         };
 
-        OutputInfo {
-            txout: TxOut {
-                value: amount,
-                script_pubkey: script_info.script,
-            },
-            script_type: script_info.script_type,
+        TxOut {
+            value: amount,
+            script_pubkey: script_info.script
         }
     }
 }
