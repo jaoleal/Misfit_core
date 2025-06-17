@@ -19,8 +19,8 @@ impl Generator {
 
         for _c in 0..tx_count {
             let tx_info = GenerateTx::valid_random(TxParams::default());
-            let raw_transaction = hex::encode(encode::serialize(&tx_info.transaction)).to_string();
-            let txid = tx_info.transaction.compute_txid().to_string();
+            let raw_transaction = hex::encode(encode::serialize(&tx_info)).to_string();
+            let txid = tx_info.compute_txid().to_string();
 
             txs.push(tx_info.transaction);
             raw_tx.push(raw_transaction);
