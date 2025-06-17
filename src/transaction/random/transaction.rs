@@ -50,10 +50,6 @@ impl RandomTransacion for Transaction {
             output: vec![output_info.txout.clone()],
         };
 
-        TransactionInfo {
-            transaction,
-            input_info: vec![input_info],
-            output_info: vec![output_info],
-        }
+        transaction
     }
 }
