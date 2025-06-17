@@ -23,7 +23,7 @@ impl GenerateBlock {
         let coinbase_info = GenerateTx::valid_random(coinbase_params);
 
         let mut txs = params.txs.take().unwrap_or_default();
-        txs.insert(0, coinbase_info.transaction);
+        txs.insert(0, coinbase_info);
         params.txs = Some(txs);
 
         Block::random(params)
