@@ -35,7 +35,7 @@ pub trait RandomTransacion {
 }
 
 impl RandomTransacion for Transaction {
-    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TransactionInfo {
+    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction {
         let input_params = params.input.unwrap_or_default();
         let output_params = params.output.unwrap_or_default();
 
