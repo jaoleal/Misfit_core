@@ -22,7 +22,7 @@ impl Generator {
             let raw_transaction = hex::encode(encode::serialize(&tx_info)).to_string();
             let txid = tx_info.compute_txid().to_string();
 
-            txs.push(tx_info.transaction);
+            txs.push(tx_info);
             raw_tx.push(raw_transaction);
             tx_ids.push(txid);
         }
