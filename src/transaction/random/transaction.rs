@@ -1,10 +1,16 @@
 use super::{
-    input::{InputParams, RandomInput, },
+    input::{InputParams, RandomInput},
     locktime::RandomLockTime,
     output::{OutputParams, RandomOutput},
     version::RandomVersion,
 };
-use bitcoin::{absolute::LockTime, key::PrivateKey, secp256k1::{All, Secp256k1}, transaction::Version, Transaction, TxIn, TxOut};
+use bitcoin::{
+    absolute::LockTime,
+    key::PrivateKey,
+    secp256k1::{All, Secp256k1},
+    transaction::Version,
+    Transaction, TxIn, TxOut,
+};
 
 pub struct TxParams {
     pub(crate) version: Option<Version>,
@@ -12,7 +18,6 @@ pub struct TxParams {
     pub(crate) input: Option<InputParams>,
     pub(crate) output: Option<OutputParams>,
 }
-
 
 impl Default for TxParams {
     fn default() -> Self {
