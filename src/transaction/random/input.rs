@@ -3,8 +3,7 @@ use bitcoin::{
     hashes::Hash,
     secp256k1::{All, Message, Secp256k1},
     sighash::{EcdsaSighashType, SighashCache},
-    transaction::Version,
-    Amount, OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness,
+    OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness,
 };
 use secp256k1::rand::{self, Rng};
 
@@ -34,11 +33,11 @@ impl Default for InputParams {
 }
 
 pub trait RandomInput {
-    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxIn;
+    fn random(params: InputParams, privatekey: &PrivateKey) -> TxIn;
 }
 
 impl RandomInput for TxIn {
-    fn random(params: InputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> TxIn {
+    fn random(params: InputParams, privatekey: &PrivateKey) -> TxIn {
         // Create a random transaction {
         let mut random_tx_params = TxParams::default();
         let mut random_input_params = InputParams::default();
@@ -50,7 +49,7 @@ impl RandomInput for TxIn {
 
         random_tx_params.input = Some(random_input_params);
 
-        let random_input_tx = Transaction::random(random_tx_params, curve, privatekey);
+        let random_input_tx = Transaction::random(random_tx_params, privatekey);
         // }
 
         let outpoint = params.outpoint.unwrap_or_else(|| OutPoint {
@@ -63,7 +62,6 @@ impl RandomInput for TxIn {
                 params.script_params.unwrap_or(ScriptParams {
                     script_type: Some(ScriptTypes::P2WPKH),
                 }),
-                curve,
                 privatekey,
             )
         });

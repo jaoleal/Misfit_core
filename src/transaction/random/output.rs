@@ -25,11 +25,11 @@ impl Default for OutputParams {
 }
 
 pub trait RandomOutput {
-    fn random(params: OutputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> (TxOut, ScriptTypes);
+    fn random(params: OutputParams, privatekey: &PrivateKey) -> (TxOut, ScriptTypes);
 }
 
 impl RandomOutput for TxOut {
-    fn random(params: OutputParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> (TxOut, ScriptTypes) {
+    fn random(params: OutputParams, privatekey: &PrivateKey) -> (TxOut, ScriptTypes) {
         let amount = params
             .value
             .unwrap_or_else(|| Amount::from_sat(rand::thread_rng().gen::<u64>()));
@@ -38,7 +38,6 @@ impl RandomOutput for TxOut {
             Some(script) => (script, ScriptTypes::P2PKH),
             None => ScriptBuf::random(
                 params.script_params.unwrap_or_default(),
-                curve,
                 privatekey
             ),
         };

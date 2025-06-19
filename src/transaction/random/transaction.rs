@@ -31,17 +31,17 @@ impl Default for TxParams {
 }
 
 pub trait RandomTransacion {
-    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction;
+    fn random(params: TxParams, privatekey: &PrivateKey) -> Transaction;
 }
 
 impl RandomTransacion for Transaction {
-    fn random(params: TxParams, curve: &Secp256k1<All>, privatekey: &PrivateKey) -> Transaction {
+    fn random(params: TxParams, privatekey: &PrivateKey) -> Transaction {
         let input_params = params.input.unwrap_or_default();
         let output_params = params.output.unwrap_or_default();
 
         // Gerar input e output com suas informações
-        let input_info = TxIn::random(input_params, curve, privatekey);
-        let output_info = TxOut::random(output_params, curve, privatekey);
+        let input_info = TxIn::random(input_params, privatekey);
+        let output_info = TxOut::random(output_params, privatekey);
 
         let transaction = Transaction {
             version: params.version.unwrap_or_else(|| Version::random()),
