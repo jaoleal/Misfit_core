@@ -1,9 +1,5 @@
 use bitcoin::{
-    ecdsa::Signature,
-    hashes::Hash,
-    secp256k1::{All, Message, Secp256k1},
-    sighash::{EcdsaSighashType, SighashCache},
-    OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness,
+    ecdsa::Signature, hashes::Hash, secp256k1::{Message, Secp256k1}, sighash::{EcdsaSighashType, SighashCache}, NetworkKind, OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness
 };
 use secp256k1::rand::{self, Rng};
 
@@ -18,6 +14,7 @@ pub struct InputParams {
     pub sequence: Option<Sequence>,
     pub witness: Option<Witness>,
     pub script_params: Option<ScriptParams>,
+    pub private_key: Option<PrivateKey>,
 }
 
 impl Default for InputParams {
@@ -28,17 +25,17 @@ impl Default for InputParams {
             sequence: None,
             witness: None,
             script_params: None,
+            private_key: None,
         }
     }
 }
 
 pub trait RandomInput {
-    fn random(params: InputParams, privatekey: &PrivateKey) -> TxIn;
+    fn random(params: InputParams) -> TxIn;
 }
 
 impl RandomInput for TxIn {
-    fn random(params: InputParams, privatekey: &PrivateKey) -> TxIn {
-        // Create a random transaction {
+    fn random(params: InputParams) -> TxIn {
         let mut random_tx_params = TxParams::default();
         let mut random_input_params = InputParams::default();
 
@@ -49,20 +46,23 @@ impl RandomInput for TxIn {
 
         random_tx_params.input = Some(random_input_params);
 
-        let random_input_tx = Transaction::random(random_tx_params, privatekey);
-        // }
+        let random_input_tx = Transaction::random(random_tx_params);
 
         let outpoint = params.outpoint.unwrap_or_else(|| OutPoint {
             txid: random_input_tx.compute_txid(),
             vout: rand::thread_rng().gen::<u32>(),
         });
 
+        let private_key = params
+            .private_key
+            .unwrap_or_else(|| PrivateKey::generate(NetworkKind::Main));
+
         let (script_buf, script_type) = params.script.unwrap_or_else(|| {
             ScriptBuf::random(
                 params.script_params.unwrap_or(ScriptParams {
-                    script_type: Some(ScriptTypes::P2WPKH),
+                    script_type: None,
+                    private_key: Some(private_key),
                 }),
-                privatekey,
             )
         });
 
@@ -70,7 +70,7 @@ impl RandomInput for TxIn {
             .sequence
             .unwrap_or_else(|| Sequence(rand::thread_rng().gen::<u32>()));
 
-        let witness = sign_witness(random_input_tx, outpoint, script_buf.clone(), privatekey);
+        let witness = sign_witness(random_input_tx, outpoint, script_buf.clone(), &private_key);
 
         TxIn {
             previous_output: outpoint,

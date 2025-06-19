@@ -5,11 +5,7 @@ use super::{
     version::RandomVersion,
 };
 use bitcoin::{
-    absolute::LockTime,
-    key::PrivateKey,
-    secp256k1::{All, Secp256k1},
-    transaction::Version,
-    Transaction, TxIn, TxOut,
+    absolute::LockTime, transaction::Version, NetworkKind, PrivateKey, Transaction, TxIn, TxOut,
 };
 
 pub struct TxParams {
@@ -17,6 +13,7 @@ pub struct TxParams {
     pub(crate) lock_time: Option<LockTime>,
     pub(crate) input: Option<InputParams>,
     pub(crate) output: Option<OutputParams>,
+    pub(crate) private_key: Option<PrivateKey>,
 }
 
 impl Default for TxParams {
@@ -26,22 +23,30 @@ impl Default for TxParams {
             lock_time: None,
             input: None,
             output: None,
+            private_key: None,
         }
     }
 }
 
 pub trait RandomTransacion {
-    fn random(params: TxParams, privatekey: &PrivateKey) -> Transaction;
+    fn random(params: TxParams) -> Transaction;
 }
 
 impl RandomTransacion for Transaction {
-    fn random(params: TxParams, privatekey: &PrivateKey) -> Transaction {
-        let input_params = params.input.unwrap_or_default();
-        let output_params = params.output.unwrap_or_default();
+    fn random(params: TxParams) -> Transaction {
+        let private_key = params
+            .private_key
+            .unwrap_or_else(|| PrivateKey::generate(NetworkKind::Main));
+
+        let mut input_params = params.input.unwrap_or_default();
+        let mut output_params = params.output.unwrap_or_default();
+
+        input_params.private_key = Some(private_key);
+        output_params.private_key = Some(private_key);
 
         // Gerar input e output com suas informações
-        let input_info = TxIn::random(input_params, privatekey);
-        let output_info = TxOut::random(output_params, privatekey);
+        let input_info = TxIn::random(input_params);
+        let output_info = TxOut::random(output_params);
 
         let transaction = Transaction {
             version: params.version.unwrap_or_else(|| Version::random()),
