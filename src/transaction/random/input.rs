@@ -1,7 +1,10 @@
 use bitcoin::{
-    ecdsa::Signature, hashes::Hash, secp256k1::{Message, Secp256k1}, sighash::{EcdsaSighashType, SighashCache}, NetworkKind, OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, Transaction, TxIn, Txid, Witness
+    hashes::Hash, NetworkKind, OutPoint, PrivateKey, ScriptBuf, Sequence, Transaction, TxIn, Txid,
+    Witness,
 };
 use secp256k1::rand::{self, Rng};
+
+use crate::transaction::random::witness::{RandomWitness, WitnessParams};
 
 use super::{
     script::{RandomScript, ScriptParams, ScriptTypes},
@@ -36,72 +39,59 @@ pub trait RandomInput {
 
 impl RandomInput for TxIn {
     fn random(params: InputParams) -> TxIn {
-        let mut random_tx_params = TxParams::default();
-        let mut random_input_params = InputParams::default();
-
-        random_input_params.outpoint = Some(OutPoint {
-            txid: Txid::all_zeros(),
-            vout: rand::thread_rng().gen::<u32>(),
-        });
-
-        random_tx_params.input = Some(random_input_params);
-
-        let random_input_tx = Transaction::random(random_tx_params);
-
-        let outpoint = params.outpoint.unwrap_or_else(|| OutPoint {
-            txid: random_input_tx.compute_txid(),
-            vout: rand::thread_rng().gen::<u32>(),
-        });
+        let mut witness_params = WitnessParams::default();
 
         let private_key = params
             .private_key
             .unwrap_or_else(|| PrivateKey::generate(NetworkKind::Main));
+        witness_params.private_key = Some(private_key);
 
         let (script_buf, script_type) = params.script.unwrap_or_else(|| {
-            ScriptBuf::random(
-                params.script_params.unwrap_or(ScriptParams {
-                    script_type: None,
-                    private_key: Some(private_key),
-                }),
-            )
+            ScriptBuf::random(params.script_params.unwrap_or(ScriptParams {
+                script_type: None,
+                private_key: Some(private_key),
+            }))
         });
+        witness_params.script = Some((script_buf.clone(), script_type));
+
+        let outpoint = params.outpoint.unwrap_or_else(|| {
+            let mut random_tx_params = TxParams::default();
+            let mut random_input_params = InputParams::default();
+
+            random_input_params.witness = Some(Witness::default());
+            random_input_params.outpoint = Some(OutPoint {
+                txid: Txid::all_zeros(),
+                vout: rand::thread_rng().gen::<u32>(),
+            });
+
+            random_tx_params.input = Some(random_input_params);
+
+            let random_input_tx = Transaction::random(random_tx_params);
+
+            witness_params.transaction = Some(random_input_tx.clone());
+
+            let vout = rand::thread_rng().gen_range(0..random_input_tx.output.len());
+            witness_params.vout = Some(vout);
+
+            OutPoint {
+                txid: random_input_tx.compute_txid(),
+                vout: vout.try_into().unwrap(),
+            }
+        });
+
+        let witness = params
+            .witness
+            .unwrap_or_else(|| Witness::random(witness_params));
 
         let sequence = params
             .sequence
             .unwrap_or_else(|| Sequence(rand::thread_rng().gen::<u32>()));
 
-        let witness = sign_witness(random_input_tx, outpoint, script_buf.clone(), &private_key);
-
         TxIn {
             previous_output: outpoint,
             script_sig: script_buf,
             sequence,
-            witness,
+            witness: witness,
         }
     }
-}
-
-fn sign_witness(
-    tx: Transaction,
-    outpoint: OutPoint,
-    script_buf: ScriptBuf,
-    privatekey: &PrivateKey,
-) -> Witness {
-    let amount = &tx.output.iter().map(|tx_out| tx_out.value).sum();
-
-    let sighash = SighashCache::new(tx)
-        .p2wpkh_signature_hash(outpoint.vout.try_into().unwrap(), &script_buf, *amount, EcdsaSighashType::All)
-        .unwrap();
-
-    let signature = Signature {
-        signature: Secp256k1::new().sign_ecdsa(
-            &Message::from_digest_slice(sighash.as_byte_array()).unwrap(),
-            &privatekey.inner,
-        ),
-        sighash_type: EcdsaSighashType::All,
-    };
-    
-    let pub_key = PublicKey::from_private_key(&Secp256k1::new(), privatekey);
-
-    Witness::p2wpkh(&signature, &pub_key.inner)
 }
