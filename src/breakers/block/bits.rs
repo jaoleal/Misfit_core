@@ -7,8 +7,7 @@ impl BitsProcessor {
     /// Process the bits (difficulty target)
     pub fn process_bits(bits: u32) -> u32 {
         // XOR with mask to modify difficulty
-        let modified_bits = bits ^ 0x00FFFFFF;
-        modified_bits
+        bits ^ 0x00FFFFFF
     }
 
     /// Convert consensus bits to CompactTarget type
@@ -107,8 +106,7 @@ impl BitsProcessor {
 
     /// Flip specific bits in the difficulty target
     pub fn flip_bits_pattern(bits: u32, pattern: u32) -> u32 {
-        let modified = bits ^ pattern;
-        modified
+        bits ^ pattern
     }
 
     /// Set bits to a specific difficulty level

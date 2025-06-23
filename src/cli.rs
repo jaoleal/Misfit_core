@@ -355,7 +355,7 @@ fn block(txscount: u32) {
     println!("Block: {}", block);
 }
 fn clear() {
-    print!("\x1B[2J\x1B[1;1H");
+    print!("\x1B[2J\x1B[1;1H"); 
     io::stdout().flush().unwrap();
 }
 
