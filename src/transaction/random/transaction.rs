@@ -9,11 +9,11 @@ use bitcoin::{
 };
 
 pub struct TxParams {
-    pub(crate) version: Option<Version>,
-    pub(crate) lock_time: Option<LockTime>,
-    pub(crate) input: Option<InputParams>,
-    pub(crate) output: Option<OutputParams>,
-    pub(crate) private_key: Option<PrivateKey>,
+    pub version: Option<Version>,
+    pub lock_time: Option<LockTime>,
+    pub input: Option<InputParams>,
+    pub output: Option<OutputParams>,
+    pub private_key: Option<PrivateKey>,
 }
 
 impl Default for TxParams {
