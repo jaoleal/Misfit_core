@@ -46,6 +46,7 @@ impl Generator {
 
         [
             format!("{:#?} ", block.header),
+            format!("Block Header encoded: {:#?}", encode::serialize_hex(&block.header)),
             format!("Raw txs: {:#?}", raw_tx),
             format!("TxID: {:#?}", tx_ids),
         ]

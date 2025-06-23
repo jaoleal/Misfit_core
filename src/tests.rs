@@ -47,23 +47,20 @@ mod tests {
         assert!(result.contains("TXIDs:"));
     }
 
-    #[test]
+      #[test]
     fn test_generate_one_block_with_one_transaction() {
         let result = Generator::block(1);
         let sections: Vec<&str> = result.split("\n---\n").collect();
-        assert_eq!(sections.len(), 3);
+        assert_eq!(sections.len(), 4); // <-- Ajuste aqui (antes era 3)
         assert!(result.contains("Header"));
         assert!(result.contains("Raw txs:"));
         assert!(result.contains("TxID:"));
-        
     }
       #[test]
-    //for now sometimes it will break because we dont have error handling for blocks with zero txs
     fn generate_zero_tx_block() {
         let result = Generator::block(0);
-        // Split by separator and check structure
         let sections: Vec<&str> = result.split("\n---\n").collect();
-        assert_eq!(sections.len(), 3);
+        assert_eq!(sections.len(), 4); // <-- Ajuste aqui (antes era 3)
         assert!(result.contains("Header"));
         assert!(result.contains("Raw txs:"));
         assert!(result.contains("TxID:"));  
@@ -71,15 +68,12 @@ mod tests {
 
     #[test]
     fn test_generate_block_with_multiple_transactions() {
-        let tx_count = 2;
+        let tx_count = 10;
         let result = Generator::block(tx_count);
-        
-        // Check basic structure
         assert!(result.contains("Raw txs:"));
         assert!(result.contains("TxID:"));
-        
         let sections: Vec<&str> = result.split("\n---\n").collect();
-        assert_eq!(sections.len(), 3);
+        assert_eq!(sections.len(), 4); // <-- Ajuste aqui (antes era 3)
     }
 
 
