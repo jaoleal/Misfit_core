@@ -29,7 +29,7 @@ pub trait RandomBlock {
 impl RandomBlock for Block {
     fn random(params: BlockParams) -> Block {
         let tx_data = params.txs.unwrap_or_else(|| {
-            let random = rand::thread_rng().gen_range(0..10);
+            let random = rand::thread_rng().gen_range(1..10);
 
             let mut txs = vec![];
             for _ in 0..random {

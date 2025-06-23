@@ -31,7 +31,7 @@ impl MerkleRoot for TxMerkleNode {
 
     fn random(params: MerkleRootParams) -> TxMerkleNode {
         let txs = params.txs.unwrap_or_else(|| {
-            let random = rand::thread_rng().gen_range(0..10);
+            let random = rand::thread_rng().gen_range(1..10);
 
             let mut txs = vec![];
             for _ in 0..random {
