@@ -9,11 +9,9 @@ pub struct HeaderProcessor;
 impl HeaderProcessor {
     pub fn process_prev_block_hash(_hash: &BlockHash, randomize_hashes: bool) -> BlockHash {
         if randomize_hashes {
-            let random_hash = Self::generate_random_block_hash();
-            random_hash
+            Self::generate_random_block_hash()
         } else {
-            let zero_hash = BlockHash::all_zeros();
-            zero_hash
+            BlockHash::all_zeros()
         }
     }
 
@@ -35,8 +33,7 @@ impl HeaderProcessor {
     /// Process the nonce
     pub fn process_nonce(nonce: u32) -> u32 {
         // Bitwise NOT to invert all bits
-        let modified_nonce = !nonce;
-        modified_nonce
+        !nonce
     }
 
     /// Generate a random block hash

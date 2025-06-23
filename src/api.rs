@@ -46,6 +46,7 @@ impl Generator {
 
         [
             format!("{:#?} ", block.header),
+            format!("Block Header encoded: {:#?}", encode::serialize_hex(&block.header)),
             format!("Raw txs: {:#?}", raw_tx),
             format!("TxID: {:#?}", tx_ids),
         ]
@@ -86,8 +87,7 @@ impl Generator {
         raw_tx: String,
     ) -> Result<Transaction, Box<dyn std::error::Error>> {
         let decoder = decoder_tools::BitcoinTransactionDecoder::new();
-        let decoded = decoder.decode_hex(&raw_tx);
-        decoded
+        decoder.decode_hex(&raw_tx)
     }
 
     pub fn decoder_block_header(
@@ -96,7 +96,7 @@ impl Generator {
         decoder_tools::BlockUtils::decode_header_from_hex(&block_header)
     }
     pub fn regtest_invocation(name_of_wallet: &str, mode_of_cli: &str) -> RegtestManager {
-        RegtestManager::new(&name_of_wallet, &mode_of_cli)
+        RegtestManager::new(name_of_wallet, mode_of_cli)
     }
 
     pub fn break_transaction(transaction: String, cli_flags: Vec<String>) -> String {
@@ -199,7 +199,7 @@ impl Generator {
 
         // Create block from header for processing
         let original_block =
-            decoder_tools::BlockUtils::create_minimal_block_from_header(decoded_header.clone());
+            decoder_tools::BlockUtils::create_minimal_block_from_header(decoded_header);
 
         // Process the block using BlockProcessor
         let processor = block::block::BlockProcessor::new(processing_config.clone());

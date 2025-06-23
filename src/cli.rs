@@ -252,7 +252,7 @@ fn help() {
     println!("\x1b[32m[Decode]\x1b[0m");
     println!("decode-transaction <raw_tx>           - Decode a raw transaction");
     println!("decode-block <block_header>           - Decode a block header");
-    println!("");
+    println!(" ");
     println!("\x1b[32m[Break/Invalidate]\x1b[0m");
     println!("  \x1b[34mbreak-transaction <raw_tx> [FLAGS]\x1b[0m   - Break/invalidate specific fields of a transaction");
     println!("  Available flags:");
@@ -355,7 +355,7 @@ fn block(txscount: u32) {
     println!("Block: {}", block);
 }
 fn clear() {
-    print!("\x1B[2J\x1B[1;1H");
+    print!("\x1B[2J\x1B[1;1H"); 
     io::stdout().flush().unwrap();
 }
 

@@ -1,4 +1,5 @@
 /target
+flake.lock
 .venv/
 build/
 *.egg-info
