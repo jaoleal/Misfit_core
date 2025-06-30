@@ -17,18 +17,10 @@ pub enum ScriptTypes {
     P2WSH,
 }
 
+#[derive(Default)]
 pub struct ScriptParams {
     pub script_type: Option<ScriptTypes>,
     pub private_key: Option<PrivateKey>,
-}
-
-impl Default for ScriptParams {
-    fn default() -> Self {
-        ScriptParams {
-            script_type: None,
-            private_key: None,
-        }
-    }
 }
 
 pub trait RandomScript {

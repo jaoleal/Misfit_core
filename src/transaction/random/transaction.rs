@@ -8,6 +8,8 @@ use bitcoin::{
     absolute::LockTime, transaction::Version, NetworkKind, PrivateKey, Transaction, TxIn, TxOut,
 };
 
+
+#[derive(Default)]
 pub struct TxParams {
     pub version: Option<Version>,
     pub lock_time: Option<LockTime>,
@@ -16,17 +18,7 @@ pub struct TxParams {
     pub private_key: Option<PrivateKey>,
 }
 
-impl Default for TxParams {
-    fn default() -> Self {
-        TxParams {
-            version: None,
-            lock_time: None,
-            input: None,
-            output: None,
-            private_key: None,
-        }
-    }
-}
+
 
 pub trait RandomTransacion {
     fn random(params: TxParams) -> Transaction;
@@ -48,13 +40,11 @@ impl RandomTransacion for Transaction {
         let input_info = TxIn::random(input_params);
         let output_info = TxOut::random(output_params);
 
-        let transaction = Transaction {
-            version: params.version.unwrap_or_else(|| Version::random()),
-            lock_time: params.lock_time.unwrap_or_else(|| LockTime::random()),
+        Transaction {
+            version: params.version.unwrap_or_else(Version::random),
+            lock_time: params.lock_time.unwrap_or_else(LockTime::random),
             input: vec![input_info.clone()],
             output: vec![output_info.0.clone()],
-        };
-
-        transaction
+        }
     }
 }

@@ -11,6 +11,8 @@ use super::{
     transaction::{RandomTransacion, TxParams},
 };
 
+
+#[derive(Default)] 
 pub struct InputParams {
     pub outpoint: Option<OutPoint>,
     pub script: Option<(ScriptBuf, ScriptTypes)>,
@@ -20,19 +22,7 @@ pub struct InputParams {
     pub private_key: Option<PrivateKey>,
 }
 
-impl Default for InputParams {
-    fn default() -> Self {
-        InputParams {
-            outpoint: None,
-            script: None,
-            sequence: None,
-            witness: None,
-            script_params: None,
-            private_key: None,
-        }
-    }
-}
-
+ 
 pub trait RandomInput {
     fn random(params: InputParams) -> TxIn;
 }
@@ -56,13 +46,14 @@ impl RandomInput for TxIn {
 
         let outpoint = params.outpoint.unwrap_or_else(|| {
             let mut random_tx_params = TxParams::default();
-            let mut random_input_params = InputParams::default();
-
-            random_input_params.witness = Some(Witness::default());
-            random_input_params.outpoint = Some(OutPoint {
-                txid: Txid::all_zeros(),
-                vout: rand::thread_rng().gen::<u32>(),
-            });
+            let random_input_params = InputParams {
+                witness: Some(Witness::default()),
+                outpoint: Some(OutPoint {
+                    txid: Txid::all_zeros(),
+                    vout: rand::thread_rng().gen::<u32>(),
+                }),
+                ..Default::default()
+            };
 
             random_tx_params.input = Some(random_input_params);
 

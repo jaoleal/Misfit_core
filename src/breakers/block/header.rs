@@ -17,7 +17,7 @@ impl HeaderProcessor {
 
     /// Process the timestamp
     pub fn process_timestamp(timestamp: u32, timestamp_offset: Option<i64>) -> u32 {
-        let modified_timestamp = if let Some(offset) = timestamp_offset {
+        if let Some(offset) = timestamp_offset {
             (timestamp as i64 + offset).max(0) as u32
         } else {
             let current_time = std::time::SystemTime::now()
@@ -25,9 +25,7 @@ impl HeaderProcessor {
                 .unwrap()
                 .as_secs() as u32;
             current_time.saturating_add(31_536_000)
-        };
-        
-        modified_timestamp
+        }
     }
 
     /// Process the nonce

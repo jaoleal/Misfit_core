@@ -3,6 +3,7 @@ use secp256k1::rand::{self, Rng};
 
 use super::script::{RandomScript, ScriptParams, ScriptTypes};
 
+#[derive(Default)]
 pub struct OutputParams {
     pub value: Option<Amount>,
     pub script_params: Option<ScriptParams>,
@@ -14,15 +15,6 @@ pub struct OutputInfo {
     pub script_type: ScriptTypes,
 }
 
-impl Default for OutputParams {
-    fn default() -> Self {
-        OutputParams {
-            value: None,
-            script_params: None,
-            private_key: None,
-        }
-    }
-}
 
 pub trait RandomOutput {
     fn random(params: OutputParams) -> (TxOut, ScriptTypes);

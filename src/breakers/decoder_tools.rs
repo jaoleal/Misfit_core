@@ -5,6 +5,7 @@ use bitcoin::{
 };
 use bitcoin::consensus::Decodable;
 
+#[derive(Default)]
 pub struct BitcoinTransactionDecoder;
 
 impl BitcoinTransactionDecoder {
@@ -40,11 +41,6 @@ impl BitcoinTransactionDecoder {
     }
 }
 
-impl Default for BitcoinTransactionDecoder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 /* 
     /// Pretty print a decoded transaction

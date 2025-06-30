@@ -20,24 +20,25 @@ impl Generator {
         let mut tx_ids: Vec<String> = vec![];
 
         for _c in 0..tx_count {
-            let mut tx_params = TxParams::default();
-            let mut tx_input_params = InputParams::default();
-
-            tx_input_params.script_params = Some(ScriptParams {
+        let mut tx_params = TxParams::default();
+        let tx_input_params = InputParams {
+            script_params: Some(ScriptParams {
                 script_type: Some(ScriptTypes::P2WPKH),
                 private_key: None,
-            });
+            }),
+            ..Default::default()
+        };
 
-            tx_params.input = Some(tx_input_params);
+        tx_params.input = Some(tx_input_params);
 
-            let tx_info = GenerateTx::valid_random(tx_params);
-            let raw_transaction = hex::encode(encode::serialize(&tx_info)).to_string();
-            let txid = tx_info.compute_txid().to_string();
+        let tx_info = GenerateTx::valid_random(tx_params);
+        let raw_transaction = hex::encode(encode::serialize(&tx_info)).to_string();
+        let txid = tx_info.compute_txid().to_string();
 
-            txs.push(tx_info);
-            raw_tx.push(raw_transaction);
-            tx_ids.push(txid);
-        }
+        txs.push(tx_info);
+        raw_tx.push(raw_transaction);
+        tx_ids.push(txid);
+}
 
         let block = GenerateBlock::valid_random(BlockParams {
             header: None,
@@ -58,23 +59,24 @@ impl Generator {
         let mut txid: Vec<String> = vec![];
 
         for _c in 0..count {
-            let mut tx_params = TxParams::default();
-            let mut tx_input_params = InputParams::default();
-
-            tx_input_params.script_params = Some(ScriptParams {
+        let mut tx_params = TxParams::default();
+        let tx_input_params = InputParams {
+            script_params: Some(ScriptParams {
                 script_type: Some(ScriptTypes::P2WPKH),
                 private_key: None,
-            });
+            }),
+            ..Default::default()
+        };
 
-            tx_params.input = Some(tx_input_params);
+        tx_params.input = Some(tx_input_params);
 
-            let tx_info = GenerateTx::valid_random(tx_params);
-            let raw_transaction = hex::encode(encode::serialize(&tx_info)).to_string();
-            let tx_id = tx_info.compute_txid().to_string();
+        let tx_info = GenerateTx::valid_random(tx_params);
+        let raw_transaction = hex::encode(encode::serialize(&tx_info)).to_string();
+        let tx_id = tx_info.compute_txid().to_string();
 
-            raw_tx.push(raw_transaction);
-            txid.push(tx_id);
-        }
+        raw_tx.push(raw_transaction);
+        txid.push(tx_id);
+    }
 
         [
             format!("Raw Transactions: {:#?}", raw_tx),
@@ -247,7 +249,7 @@ impl Generator {
         }
 
         // Display original header info
-        result.push_str(&format!("\nOriginal Block Header:\n"));
+        result.push_str("\nOriginal Block Header:\n");
         result.push_str(&format!(
             "  Version: {}\n",
             decoded_header.version.to_consensus()
@@ -266,7 +268,7 @@ impl Generator {
         result.push_str(&format!("  Block Hash: {}\n", decoded_header.block_hash()));
 
         // Display broken header info
-        result.push_str(&format!("\nBroken Block Header:\n"));
+        result.push_str("\nBroken Block Header:\n");
         result.push_str(&format!(
             "  Version: {}\n",
             broken_block.header.version.to_consensus()

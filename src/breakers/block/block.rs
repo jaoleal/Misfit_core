@@ -15,7 +15,7 @@ pub enum BlockField {
 }
 
 // Configuration for block processing
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ProcessingConfig {
     pub fields_to_modify: Vec<BlockField>,
     pub version_override: Option<i32>,
@@ -23,16 +23,7 @@ pub struct ProcessingConfig {
     pub randomize_hashes: bool,
 }
 
-impl Default for ProcessingConfig {
-    fn default() -> Self {
-        ProcessingConfig {
-            fields_to_modify: vec![BlockField::All],
-            version_override: None,
-            timestamp_offset: None,
-            randomize_hashes: true,
-        }
-    }
-}
+
 
 // Block processing and modification implementation
 pub struct BlockProcessor {

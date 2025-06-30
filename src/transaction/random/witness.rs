@@ -14,22 +14,12 @@ use crate::transaction::random::{
     transaction::{RandomTransacion, TxParams},
 };
 
+#[derive(Default, Debug, Clone)]
 pub struct WitnessParams {
     pub transaction: Option<Transaction>,
     pub vout: Option<usize>,
     pub script: Option<(ScriptBuf, ScriptTypes)>,
     pub private_key: Option<PrivateKey>,
-}
-
-impl Default for WitnessParams {
-    fn default() -> Self {
-        WitnessParams {
-            transaction: None,
-            vout: None,
-            script: None,
-            private_key: None,
-        }
-    }
 }
 
 pub trait RandomWitness {

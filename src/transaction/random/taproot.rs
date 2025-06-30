@@ -9,7 +9,7 @@ use bitcoin::{
 use crate::transaction::random::script::ScriptTypes;
 use secp256k1::rand::{self};
 
-
+#[derive(Default)]
 pub struct TaprootWitnessParams {
     pub transaction: Option<Transaction>,
     pub vout: Option<usize>,
@@ -18,17 +18,6 @@ pub struct TaprootWitnessParams {
     pub script_type: Option<ScriptTypes>,
 }
 
-impl Default for TaprootWitnessParams {
-    fn default() -> Self {
-        TaprootWitnessParams {
-            transaction: None,
-            vout: None,
-            utxo: None,
-            keypair: None,
-            script_type: Some(ScriptTypes::P2TR), 
-        }
-    }
-}
 
 pub trait RandomTaprootWitness {
     fn random(params: TaprootWitnessParams) -> Witness;
