@@ -349,13 +349,6 @@ mod tests {
             ScriptTypes::P2PK | ScriptTypes::P2PKH | ScriptTypes::P2SH => {
                 assert!(witness.is_empty(), "Legacy script type {:?} should have empty witness", script_type);
             }
-            ScriptTypes::P2WSH => {
-                if witness.is_empty() {
-                    println!("Aviso: witness vazio para P2WSH. Corrigir isso futuramente!");
-                } else {
-                    assert!(!witness.is_empty(), "Script type {:?} should have non-empty witness", script_type);
-                }
-            }
             _ => {
                 // SegWit e Taproot: witness should be filled
                 assert!(!witness.is_empty(), "Script type {:?} should have non-empty witness", script_type);

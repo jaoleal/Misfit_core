@@ -4,7 +4,7 @@ use bitcoin::{
 };
 use secp256k1::rand::{self, Rng};
 
-use crate::transaction::random::{witness::{RandomWitness, WitnessParams}, taproot::{RandomTaprootWitness, TaprootWitnessParams}};
+use crate::transaction::random::{witness::{RandomWitness, WitnessParams,RandomTaprootWitness, TaprootWitnessParams}};
 
 use super::{
     script::{RandomScript, ScriptParams, ScriptTypes},
@@ -72,7 +72,7 @@ impl RandomInput for TxIn {
 
         let witness = params.witness.unwrap_or_else(|| {
             match script_type {
-                ScriptTypes::P2WPKH | ScriptTypes::P2SH => {
+                ScriptTypes::P2WPKH | ScriptTypes::P2WSH => {
                     <Witness as RandomWitness>::random(witness_params)
                 }
                 ScriptTypes::P2TR | ScriptTypes::P2TWEAKEDTR => {
