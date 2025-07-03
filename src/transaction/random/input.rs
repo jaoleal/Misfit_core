@@ -4,15 +4,14 @@ use bitcoin::{
 };
 use secp256k1::rand::{self, Rng};
 
-use crate::transaction::random::{witness::{RandomWitness, WitnessParams,RandomTaprootWitness, TaprootWitnessParams}};
+use crate::transaction::random::witness::{RandomWitness, WitnessParams};
 
 use super::{
     script::{RandomScript, ScriptParams, ScriptTypes},
     transaction::{RandomTransacion, TxParams},
 };
 
-
-#[derive(Default)] 
+#[derive(Default)]
 pub struct InputParams {
     pub outpoint: Option<OutPoint>,
     pub script: Option<(ScriptBuf, ScriptTypes)>,
@@ -22,7 +21,6 @@ pub struct InputParams {
     pub private_key: Option<PrivateKey>,
 }
 
- 
 pub trait RandomInput {
     fn random(params: InputParams) -> TxIn;
 }
@@ -70,18 +68,12 @@ impl RandomInput for TxIn {
             }
         });
 
-        let witness = params.witness.unwrap_or_else(|| {
-            match script_type {
-                ScriptTypes::P2WPKH | ScriptTypes::P2WSH => {
-                    <Witness as RandomWitness>::random(witness_params)
-                }
-                ScriptTypes::P2TR | ScriptTypes::P2TWEAKEDTR => {
-                    let taproot_params = TaprootWitnessParams::default();
-                    <Witness as RandomTaprootWitness>::random(taproot_params)                }
-                _ => {
-                    Witness::default()
-                }
-            }
+        let witness = params.witness.unwrap_or_else(|| match script_type {
+            ScriptTypes::P2WPKH
+            | ScriptTypes::P2WSH
+            | ScriptTypes::P2TR
+            | ScriptTypes::P2TWEAKEDTR => Witness::random(witness_params),
+            _ => Witness::default(),
         });
 
         let sequence = params

@@ -1,14 +1,18 @@
 use bitcoin::{
     ecdsa::Signature,
     hashes::Hash,
+    key::Keypair,
     secp256k1::{Message, Secp256k1},
     sighash::{EcdsaSighashType, SighashCache},
-    NetworkKind, OutPoint, PrivateKey, PublicKey, ScriptBuf, SegwitV0Sighash, Transaction, Txid,
-    Witness,
-    key::{Keypair, TapTweak},//TweakedKeypair
-    Amount,
     sighash::{Prevouts, TapSighashType},
-    TxOut, 
+    NetworkKind,
+    OutPoint,
+    PrivateKey,
+    PublicKey,
+    ScriptBuf,
+    Transaction,
+    Txid,
+    Witness,
 };
 use secp256k1::rand::{self, Rng};
 
@@ -17,20 +21,6 @@ use crate::transaction::random::{
     script::{RandomScript, ScriptParams, ScriptTypes},
     transaction::{RandomTransacion, TxParams},
 };
-
-
-
-#[derive(Default, Debug, Clone)]
-pub struct TaprootWitnessParams {
-    pub transaction: Option<Transaction>,
-    pub vout: Option<usize>,
-    pub utxo: Option<TxOut>,
-    pub keypair: Option<Keypair>,
-    pub script_type: Option<ScriptTypes>,
-}
-pub trait RandomTaprootWitness {
-    fn random(params: TaprootWitnessParams) -> Witness;
-}
 
 #[derive(Default, Debug, Clone)]
 pub struct WitnessParams {
@@ -70,10 +60,11 @@ impl RandomWitness for Witness {
         let (script, script_type) = params.script.unwrap_or_else(|| {
             let mut script_params = ScriptParams::default();
 
-            script_params.script_type = Some(if rand::thread_rng().gen_bool(0.5) {
-                ScriptTypes::P2WSH
-            } else {
-                ScriptTypes::P2WPKH
+            script_params.script_type = Some(match rand::thread_rng().gen_range(0..3) {
+                0 => ScriptTypes::P2TR,
+                1 => ScriptTypes::P2TWEAKEDTR,
+                2 => ScriptTypes::P2WPKH,
+                _ => ScriptTypes::P2WSH,
             });
 
             ScriptBuf::random(script_params)
@@ -85,29 +76,36 @@ impl RandomWitness for Witness {
 
         let pub_key = PublicKey::from_private_key(&Secp256k1::new(), &private_key);
 
-        let sighash = match script_type {
-            ScriptTypes::P2WPKH => SighashCache::new(&transaction)
-                .p2wpkh_signature_hash(vout, &script, amount, EcdsaSighashType::All)
-                .unwrap(),
-
-            ScriptTypes::P2WSH => SighashCache::new(&transaction)
-                .p2wsh_signature_hash(vout, &script, amount, EcdsaSighashType::All)
-                .unwrap(),
-
-            _ => SegwitV0Sighash::all_zeros(),
-        };
-
-        let sig = Signature {
-            signature: Secp256k1::new().sign_ecdsa(
-                &Message::from_digest_slice(&sighash[..]).unwrap(),
-                &private_key.inner,
-            ),
-            sighash_type: EcdsaSighashType::All,
-        };
-
         match script_type {
-            ScriptTypes::P2WPKH => Witness::p2wpkh(&sig, &pub_key.inner),
+            ScriptTypes::P2WPKH => {
+                let sighash = SighashCache::new(&transaction)
+                    .p2wpkh_signature_hash(vout, &script, amount, EcdsaSighashType::All)
+                    .unwrap();
+
+                let sig = Signature {
+                    signature: Secp256k1::new().sign_ecdsa(
+                        &Message::from_digest_slice(&sighash[..]).unwrap(),
+                        &private_key.inner,
+                    ),
+                    sighash_type: EcdsaSighashType::All,
+                };
+
+                Witness::p2wpkh(&sig, &pub_key.inner)
+            }
+
             ScriptTypes::P2WSH => {
+                let sighash = SighashCache::new(&transaction)
+                    .p2wsh_signature_hash(vout, &script, amount, EcdsaSighashType::All)
+                    .unwrap();
+
+                let sig = Signature {
+                    signature: Secp256k1::new().sign_ecdsa(
+                        &Message::from_digest_slice(&sighash[..]).unwrap(),
+                        &private_key.inner,
+                    ),
+                    sighash_type: EcdsaSighashType::All,
+                };
+
                 let mut sig_ser = sig.serialize().to_vec();
                 sig_ser.push(EcdsaSighashType::All as u8);
 
@@ -117,55 +115,28 @@ impl RandomWitness for Witness {
 
                 witness
             }
+
+            ScriptTypes::P2TR | ScriptTypes::P2TWEAKEDTR => {
+                let sighash = SighashCache::new(&transaction)
+                    .taproot_key_spend_signature_hash(
+                        vout,
+                        &Prevouts::All(&[transaction.tx_out(vout).unwrap()]),
+                        TapSighashType::Default,
+                    )
+                    .unwrap();
+
+                let sig = bitcoin::taproot::Signature {
+                    signature: Secp256k1::new().sign_schnorr(
+                        &Message::from_digest_slice(&sighash[..]).unwrap(),
+                        &Keypair::from_secret_key(&Secp256k1::new(), &private_key.inner),
+                    ),
+                    sighash_type: TapSighashType::Default,
+                };
+
+                Witness::p2tr_key_spend(&sig)
+            }
+
             _ => Witness::default(),
         }
-    }
-}
-
-
-impl RandomTaprootWitness for Witness {
-    fn random(mut _params: TaprootWitnessParams) -> Witness {
-        let secp = Secp256k1::new();
-
-        let keypair = _params.keypair.unwrap_or_else(|| {
-            let sk = bitcoin::secp256k1::SecretKey::new(&mut rand::thread_rng());
-            Keypair::from_secret_key(&secp, &sk)
-        });
-
-        let tx = _params.transaction.unwrap_or_else(|| {
-            Transaction {
-                version: bitcoin::transaction::Version::TWO,
-                lock_time: bitcoin::absolute::LockTime::ZERO,
-                input: vec![bitcoin::TxIn::default()],
-                output: vec![],
-            }
-        });
-
-        let vout = _params.vout.unwrap_or(0);
-        let utxo = _params.utxo.unwrap_or_else(|| TxOut {
-            value: Amount::from_sat(100_000),
-            script_pubkey: bitcoin::ScriptBuf::default(),
-        });
-        let binding = [utxo.clone()];
-        let prevouts = Prevouts::All(&binding);
-        let mut cache = SighashCache::new(&tx);
-        let sighash = cache
-            .taproot_key_spend_signature_hash(
-                vout,
-                &prevouts,
-                TapSighashType::Default,
-            )
-            .expect("sighash");
-
-        let tweaked = keypair.tap_tweak(&secp, None);
-        let msg = Message::from_digest(sighash.to_byte_array());
-        let schnorr_sig = secp.sign_schnorr(&msg, &tweaked.to_keypair());
-
-        let signature = bitcoin::taproot::Signature {
-            signature: schnorr_sig,
-            sighash_type: TapSighashType::Default,
-        };
-
-        Witness::p2tr_key_spend(&signature)
     }
 }
