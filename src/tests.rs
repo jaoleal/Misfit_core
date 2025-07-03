@@ -311,4 +311,49 @@ mod tests {
         assert!(result.contains(&misfit_core::breakers::block::block::BlockField::Bits));
         assert!(result.contains(&misfit_core::breakers::block::block::BlockField::Nonce));
     }
+    #[test]
+    fn test_transaction_witness_for_each_script_type() {
+    use misfit_core::transaction::random::{
+        input::InputParams,
+        transaction::{RandomTransacion, TxParams},
+        script::{ScriptParams, ScriptTypes},
+    };
+    let script_types = vec![
+        ScriptTypes::P2PK,
+        ScriptTypes::P2PKH,
+        ScriptTypes::P2SH,
+        ScriptTypes::P2TR,
+        ScriptTypes::P2TWEAKEDTR,
+        ScriptTypes::P2WPKH,
+        ScriptTypes::P2WSH,
+    ];
+
+    for script_type in script_types {
+        let script_params = ScriptParams {
+            script_type: Some(script_type.clone()),
+            private_key: None,
+        };
+        let input_params = InputParams {
+            script_params: Some(script_params),
+            ..Default::default()
+        };
+        let tx_params = TxParams {
+            input: Some(input_params),
+            ..Default::default()
+        };
+        let tx = <bitcoin::Transaction as RandomTransacion>::random(tx_params);
+
+        let witness = &tx.input[0].witness;
+
+        match script_type {
+            ScriptTypes::P2PK | ScriptTypes::P2PKH | ScriptTypes::P2SH => {
+                assert!(witness.is_empty(), "Legacy script type {:?} should have empty witness", script_type);
+            }
+            _ => {
+                // SegWit e Taproot: witness should be filled
+                assert!(!witness.is_empty(), "Script type {:?} should have non-empty witness", script_type);
+            }
+        }
+}
+}
 }

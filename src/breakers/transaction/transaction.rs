@@ -2,8 +2,12 @@ use std::collections::HashSet;
 use bitcoin::{Transaction, consensus::deserialize};
 use super::{InvalidationFlag, input::*, output::*, version::*, locktime::*};
 
-// Transaction processor with Bitcoin Core Transaction struct
+#[derive(Default)]
 pub struct TransactionInvalidator;
+
+#[derive(Debug, Clone, Default)]
+pub struct BitcoinTransactionDecoder;
+
 
 impl TransactionInvalidator {
     pub fn invalidate(mut tx: Transaction, flags: &HashSet<InvalidationFlag>) -> Transaction {
@@ -52,7 +56,6 @@ impl TransactionInvalidator {
     }
 }
 
-pub struct BitcoinTransactionDecoder;
 
 impl BitcoinTransactionDecoder {
     pub fn new() -> Self {
@@ -87,13 +90,8 @@ impl BitcoinTransactionDecoder {
     }
 }
 
-impl Default for BitcoinTransactionDecoder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
-// Define available invalidation flags - moved to flags.rs
+
 
 pub fn parse_flags(args: Vec<String>) -> HashSet<InvalidationFlag> {
     let mut flags = HashSet::new();

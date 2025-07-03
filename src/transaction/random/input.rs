@@ -11,6 +11,7 @@ use super::{
     transaction::{RandomTransacion, TxParams},
 };
 
+#[derive(Default)]
 pub struct InputParams {
     pub outpoint: Option<OutPoint>,
     pub script: Option<(ScriptBuf, ScriptTypes)>,
@@ -18,19 +19,6 @@ pub struct InputParams {
     pub witness: Option<Witness>,
     pub script_params: Option<ScriptParams>,
     pub private_key: Option<PrivateKey>,
-}
-
-impl Default for InputParams {
-    fn default() -> Self {
-        InputParams {
-            outpoint: None,
-            script: None,
-            sequence: None,
-            witness: None,
-            script_params: None,
-            private_key: None,
-        }
-    }
 }
 
 pub trait RandomInput {
@@ -52,17 +40,18 @@ impl RandomInput for TxIn {
                 private_key: Some(private_key),
             }))
         });
-        witness_params.script = Some((script_buf.clone(), script_type));
+        witness_params.script = Some((script_buf.clone(), script_type.clone()));
 
         let outpoint = params.outpoint.unwrap_or_else(|| {
             let mut random_tx_params = TxParams::default();
-            let mut random_input_params = InputParams::default();
-
-            random_input_params.witness = Some(Witness::default());
-            random_input_params.outpoint = Some(OutPoint {
-                txid: Txid::all_zeros(),
-                vout: rand::thread_rng().gen::<u32>(),
-            });
+            let random_input_params = InputParams {
+                witness: Some(Witness::default()),
+                outpoint: Some(OutPoint {
+                    txid: Txid::all_zeros(),
+                    vout: rand::thread_rng().gen::<u32>(),
+                }),
+                ..Default::default()
+            };
 
             random_tx_params.input = Some(random_input_params);
 
@@ -79,9 +68,13 @@ impl RandomInput for TxIn {
             }
         });
 
-        let witness = params
-            .witness
-            .unwrap_or_else(|| Witness::random(witness_params));
+        let witness = params.witness.unwrap_or_else(|| match script_type {
+            ScriptTypes::P2WPKH
+            | ScriptTypes::P2WSH
+            | ScriptTypes::P2TR
+            | ScriptTypes::P2TWEAKEDTR => Witness::random(witness_params),
+            _ => Witness::default(),
+        });
 
         let sequence = params
             .sequence

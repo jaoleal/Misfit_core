@@ -8,19 +8,14 @@ use crate::transaction::{
 
 use super::header::{HeaderParams, RandomHeader};
 
+
+#[derive(Default)]
 pub struct BlockParams {
     pub header: Option<Header>,
     pub txs: Option<Vec<Transaction>>,
 }
 
-impl Default for BlockParams {
-    fn default() -> Self {
-        BlockParams {
-            header: None,
-            txs: None,
-        }
-    }
-}
+
 
 pub trait RandomBlock {
     fn random(params: BlockParams) -> Block;
