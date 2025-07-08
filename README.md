@@ -1,6 +1,6 @@
 # Misfit-Core
 
-A tool for create specified valid or invalid scenarios for tests in bicoin on blocks and trasactions.
+A tool to create specific valid or invalid scenarios for testing Bitcoin blocks and transactions.
 
 
 ## Dependencies
@@ -22,19 +22,19 @@ Compile the project with Cargo
 ```b
 cargo build 
 ```
-run the binary 
+Run the binary
 ```b
 ./target/debug/Misfit_core 
 ```
-Or run with the cargo 
+Or run with Cargo
 ```b
 cargo run
 ```
-For now the flags are not working are just here to develop anotation 
+For now, the flags are not working, they are just here for development annotation.
 
 ### Basic usage
 
-Type Help on the cli to see the actual avaliable commands
+Type `help` on the CLI to see the available commands.
 ```b
 > help
 ```
